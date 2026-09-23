@@ -206,6 +206,21 @@ html.touch{--sb:26px}
 .rsb:hover i,.rsb.on i{background:linear-gradient(180deg,rgba(160,242,255,.92),rgba(80,190,230,.92));box-shadow:0 0 14px rgba(110,231,255,.55)}
 .rsb.full i{opacity:.3}
 
+
+/* ---------- sheet view: the song as systems, like manuscript paper ---------- */
+.sheetBox{display:flex;flex-direction:column;margin:8px 12px 4px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0c10}
+.sheetBox[hidden]{display:none}
+body.sheetMode .roll{display:none}
+.sheetBar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:5px 10px;background:#11141c;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}
+.sheetBar>b{color:var(--txt);letter-spacing:.15em;font-size:11px}
+.sheetBar .shHint{font-size:11px;opacity:.8}
+.sheetView{position:relative;flex:1;min-height:0}
+#sheetWrap{position:absolute;left:0;top:0;bottom:0;right:var(--sb);overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+#sheetWrap::-webkit-scrollbar{display:none}
+#sheetSpacer{position:relative}
+#sheetCv{position:sticky;top:0;left:0;display:block;touch-action:none}
+.sheetView .rsb.v{bottom:0}
+
 /* ---------- goat banner ---------- */
 .goatBanner{--h:285;position:relative;display:flex;align-items:center;gap:18px;margin:10px 12px 0;padding:6px 20px 6px 10px;border-radius:14px;overflow:hidden;isolation:isolate;
   background:linear-gradient(120deg,hsla(285,85%,70%,.20),hsla(200,80%,45%,.08) 45%,hsla(330,90%,65%,.16)),rgba(12,15,22,.55);
@@ -495,7 +510,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
   <label class="f">Length <input type="number" id="bars" min="1" max="512" step="1"> bars</label>
   <div class="sep"></div>
   <label class="f">Snap <select id="snap"></select></label>
-  <span class="seg"><button id="tDraw" class="on" title="Draw tool (B): click = add note, click a note = erase">✏ Draw</button><button id="tSel" title="Select tool (V): drag a box to select chords and arp notes; drag the ruler to select a section">⬚ Select</button></span>
+  <span class="seg"><button id="tDraw" class="on" title="Draw tool (B): click = add note, click a note = erase">✏ Draw</button><button id="tSel" title="Select tool (V): drag a box to select chords and arp notes; drag the ruler to select a section">⬚ Select</button></span><span class="seg"><button id="vRoll" class="on" title="Piano roll with the drawing lanes">▦ Roll</button><button id="vSheet" title="The whole song as systems, like sheet music">📜 Sheet</button></span>
   <label class="f">Stamp <select id="chord"></select></label>
   <label class="f">Zoom <input type="range" id="zoom" min="0" max="1000" step="1" style="width:90px"></label><button id="bFit" title="Zoom out to see the whole song (press again to go back)">⤢ Whole song</button>
   <label class="f" title="Piano-roll row height">Rows <input type="range" id="rowH" min="6" max="48" style="width:64px"></label>
@@ -580,6 +595,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
   </div>
   <div class="cw lanew" id="rateW"><canvas id="rateCv"></canvas></div>
 </div>
+<div class="sheetBox" id="sheetBox" hidden><div class="sheetBar"><b>📜 SHEET</b><label class="f">Bars per system <select id="shBps"><option value="0">Auto</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option></select></label><label class="f">Row height <input type="range" id="shRh" min="2" max="14" step="1" style="width:80px"></label><span class="shHint">Draw and edit notes just like the roll · tap the strip above a system to move the playhead</span></div><div class="sheetView"><div id="sheetWrap"><div id="sheetSpacer"><canvas id="sheetCv"></canvas></div></div><div class="rsb v" id="shVBar" title="Drag to scroll through the systems"><i></i></div></div></div>
 <div id="secBar" class="secBar"></div>
 <div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
 <div class="barn" id="barn">
@@ -720,6 +736,10 @@ function viewH(){
   if(!vhProbe){vhProbe=document.createElement('div');vhProbe.style.cssText='position:fixed;left:-10px;top:0;width:1px;height:100vh;height:100svh;visibility:hidden;pointer-events:none';document.body.append(vhProbe)}
   return vhProbe.offsetHeight||window.innerHeight;
 }
+// sheet view settings (a preference of this browser, not part of the song)
+const SH={on:false,bps:0,rh:5};try{Object.assign(SH,JSON.parse(localStorage.getItem('arploom.sheet'))||{})}catch(e){}
+const saveSH=()=>{try{localStorage.setItem('arploom.sheet',JSON.stringify(SH))}catch(e){}};
+let SHL=null;   // the sheet's current layout
 'use strict';
 /* ============================ constants ============================ */
 const TPQ=480, STEP=120, LO=24, HI=108, LANE_BEAT=480;
@@ -1358,7 +1378,7 @@ function sched(){
 const scroller=$('scroller'),spacer=$('spacer'),gridCv=$('grid'),rulerCv=$('ruler'),keysCv=$('keys'),velCv=$('velCv'),profCv=$('profCv');
 const gx=gridCv.getContext('2d'),rx=rulerCv.getContext('2d'),kx=keysCv.getContext('2d'),vx=velCv.getContext('2d'),px=profCv.getContext('2d');
 let DPR=1,GW=0,GH=0;
-const ppt=()=>S.view.zoom/STEP;
+const ppt=()=>SH.on&&SHL?SHL.k:S.view.zoom/STEP;   // in the sheet view: the sheet's own scale
 // zoom = pixels per 16th note: from 0.1 (a 512-bar song fits on screen) to 150; the slider is logarithmic
 const ZMIN=.1,ZMAX=150;
 const zoomToSlider=z=>Math.round(1000*Math.log(clamp(z,ZMIN,ZMAX)/ZMIN)/Math.log(ZMAX/ZMIN));
@@ -1411,6 +1431,7 @@ function applyRoll(){
   const kg=r.querySelector('.kgrip');if(kg)kg.style.left=RS.kW+'px';
   const g=[...r.querySelectorAll('.rgrip')];let y=50+26;['gH',...LANE_KEYS].forEach((k,i)=>{y+=D[k];if(g[i])g[i].style.top=y+'px'});
   if(typeof S!=='undefined'&&S)layout();
+  if(SH.on)fitSheet();
 }
 function setRowH(h){
   h=clamp(Math.round(h),6,48);if(h===ROWH)return;
@@ -1836,6 +1857,7 @@ function drawScope(){
 }
 function posText(t){const b=Math.floor(t/1920),bt=Math.floor(t%1920/TPQ),s=Math.floor(t%TPQ/STEP);return `${b+1}.${bt+1}.${s+1}`}
 function frame(){
+  if(SH.on){drawSheet();drawScope();chFollow();renderSecBar();if(window.goatFrame)goatFrame();$('pos').textContent=posText(curPos());requestAnimationFrame(frame);return}
   if(P.playing&&S.follow!==false&&follow){
     const x=curPos()*ppt();if(x<scroller.scrollLeft||x>scroller.scrollLeft+GW-40)scroller.scrollLeft=Math.max(0,x-40);
   }
@@ -1848,7 +1870,7 @@ function frame(){
 const selArp=new Set();let tool='draw',secRange=null;   // selected generated arp notes; Draw/Select tool; ruler section
 const arpKey=e=>e.t+'|'+e.p;
 const sel=new Set();let drag=null,marq=null,showArp=true,follow=true,keyHi=-1;
-function gridPt(e){const r=gridCv.getBoundingClientRect(),x=e.clientX-r.left+scroller.scrollLeft,y=e.clientY-r.top+scroller.scrollTop;return{x,y,t:x/ppt(),p:HI-Math.floor(y/ROWH)}}
+function gridPt(e){if(SH.on)return sheetPt(e);const r=gridCv.getBoundingClientRect(),x=e.clientX-r.left+scroller.scrollLeft,y=e.clientY-r.top+scroller.scrollTop;return{x,y,t:x/ppt(),p:HI-Math.floor(y/ROWH)}}
 function noteAt(t,p){for(let i=S.notes.length-1;i>=0;i--){const n=S.notes[i];if(n.p===p&&t>=n.s&&t<n.s+n.l)return n}return null}
 const snapT=()=>S.view.snap||S.arp.rate;
 const snapFloor=t=>Math.floor(t/snapT())*snapT();
@@ -2537,6 +2559,7 @@ $('chord').onchange=()=>{S.view.chord=$('chord').value;saveSoon()};
 $('zoom').oninput=()=>setZoom(sliderToZoom(+$('zoom').value));
 let fitPrev=null;
 $('bFit').onclick=()=>{   // whole song on screen; press again to go back to where you were
+  if(SH.on)setView(false);   // it zooms the roll
   const fit=clamp((GW-24)/(totalTicks()/STEP),ZMIN,ZMAX);
   if(fitPrev&&Math.abs(S.view.zoom/fit-1)<.02){const f=fitPrev;fitPrev=null;setZoom(f.z,0);scroller.scrollLeft=f.x;return}
   fitPrev={z:S.view.zoom,x:scroller.scrollLeft};setZoom(fit,0);scroller.scrollLeft=0;
@@ -3544,9 +3567,118 @@ function takeUI(d){
 })();
 
 
+/* ============================ sheet view: systems of N bars, stacked like manuscript ============================ */
+const sheetCv=$('sheetCv'),sheetWrap=$('sheetWrap'),shx=sheetCv.getContext('2d');
+function sheetGeom(){
+  const W=sheetWrap.clientWidth,ML=46,MR=12,total=totalTicks(),barsN=Math.max(1,Math.ceil(total/1920));
+  let bps=+SH.bps||0;
+  if(!bps){const fit=(W-ML-MR)/120;bps=[1,2,3,4,6,8,12,16,24,32].filter(n=>n<=Math.max(1,fit)).pop()||1}   // auto: bars at least ~120 px wide
+  let lo=127,hi=0;for(const n of S.notes){if(n.p<lo)lo=n.p;if(n.p>hi)hi=n.p}
+  if(showArp)for(const e of ARP){if(e.p<lo)lo=e.p;if(e.p>hi)hi=e.p}
+  if(lo>hi){lo=55;hi=72}
+  lo=Math.max(LO,lo-2);hi=Math.min(HI,hi+2);if(hi-lo<11){lo=Math.max(LO,Math.min(lo,hi-11));hi=Math.min(HI,lo+11)}
+  const rh=clamp(+SH.rh||5,2,14),HEAD=24,GAP=16,sysH=HEAD+(hi-lo+1)*rh,n=Math.ceil(barsN/bps),barW=(W-ML-MR)/bps;
+  return SHL={W,ML,MR,bps,lo,hi,rh,HEAD,GAP,sysH,n,barW,k:barW/1920,span:bps*1920,total,full:GAP+n*(sysH+GAP)};
+}
+// pointer -> song time + pitch. x/y are given in the editing code's units (x = t*ppt(), y = rows*ROWH), so all the roll's editing works here
+function sheetPt(e){
+  const L=SHL||sheetGeom(),r=sheetCv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top+sheetWrap.scrollTop;
+  const sys=clamp(Math.floor((y-L.GAP/2)/(L.sysH+L.GAP)),0,L.n-1),top=L.GAP+sys*(L.sysH+L.GAP);
+  const t=clamp(sys*L.span+(x-L.ML)/L.k,sys*L.span,Math.max(sys*L.span,Math.min(L.total,(sys+1)*L.span)-1));
+  const fr=(y-top-L.HEAD)/L.rh;
+  return{x:t*L.k,y:(HI-L.hi+fr)*ROWH,t,p:L.hi-Math.floor(fr),head:fr<0,margin:x<L.ML,sys};
+}
+function fitSheet(){
+  const b=$('sheetBox');if(b.hidden)return;
+  const bb=document.querySelector('.barnBar'),sb=$('secBar');
+  const avail=viewH()-(b.getBoundingClientRect().top+window.scrollY)-4-(sb&&sb.offsetHeight?sb.offsetHeight+10:0)-(bb?bb.offsetHeight+8:0)-2;
+  b.style.height=Math.max(240,Math.floor(avail))+'px';
+}
+function drawSheet(){
+  const L=sheetGeom(),W=sheetWrap.clientWidth,H=sheetWrap.clientHeight;if(W<10||H<10)return;
+  if(sheetCv._w!==W||sheetCv._h!==H||sheetCv._d!==DPR){sizeCv(sheetCv,shx,W,H);sheetCv._w=W;sheetCv._h=H;sheetCv._d=DPR}
+  $('sheetSpacer').style.height=L.full+'px';
+  const pos=curPos();
+  if(P.playing&&S.follow!==false&&follow){   // turn the page: keep the playing system on screen
+    const top=L.GAP+Math.floor(pos/L.span)*(L.sysH+L.GAP);
+    if(top<sheetWrap.scrollTop||top+L.sysH>sheetWrap.scrollTop+H)sheetWrap.scrollTop=Math.max(0,top-L.GAP);
+  }
+  const g=shx,sy=sheetWrap.scrollTop,blocks=blocksNow(),IW=L.W-L.ML-L.MR;
+  g.fillStyle='#0a0c10';g.fillRect(0,0,W,H);
+  for(let i=Math.max(0,Math.floor((sy-L.GAP)/(L.sysH+L.GAP)));i<L.n;i++){
+    const top=L.GAP+i*(L.sysH+L.GAP)-sy;if(top>H)break;
+    const t0=i*L.span,t1=Math.min(L.total,t0+L.span),xs=t=>L.ML+(t-t0)*L.k,ry=top+L.HEAD,sh=(L.hi-L.lo+1)*L.rh;
+    // the staff: one row per semitone, darker for black keys, a line under every C
+    for(let q=L.hi;q>=L.lo;q--){const y=ry+(L.hi-q)*L.rh;g.fillStyle=isBlack(q)?'#0d1016':'#13171f';g.fillRect(L.ML,y,IW,L.rh);
+      if(q%12===0){g.fillStyle='#2a3244';g.fillRect(L.ML,y+L.rh-1,IW,1);g.fillStyle='#6d7894';g.font='9px system-ui';g.textAlign='right';g.fillText(noteName(q),L.ML-5,y+L.rh);g.textAlign='left'}}
+    // pattern sections: a coloured wash, like the roll
+    for(const sg of S.segs){const a=Math.max(sg.s,t0),b=Math.min(sg.s+sg.l,t1);if(b>a){g.fillStyle=`hsla(${patHue(sg.pat)},70%,60%,.07)`;g.fillRect(xs(a),ry,(b-a)*L.k,sh)}}
+    // beat and bar lines
+    const beatPx=TPQ*L.k;
+    for(let t=t0;t<=t0+L.span;t+=TPQ){const bar=t%1920===0;if(!bar&&beatPx<6)continue;g.fillStyle=bar?'#3a4560':'#1b2130';g.fillRect(Math.round(xs(t)),ry,1,sh)}
+    // head strip: bar numbers + chord names (tap it to move the playhead)
+    g.fillStyle='#10131a';g.fillRect(L.ML,top,IW,L.HEAD);
+    for(let b=0;b<L.bps;b++){const t=t0+b*1920;if(t>=t1)break;const x=xs(t);g.fillStyle='#39425a';g.fillRect(x,top,1,L.HEAD);g.fillStyle='#8490a8';g.font='9px system-ui';g.fillText(String(t/1920+1),x+3,top+9)}
+    g.font='600 11px system-ui';
+    for(const c of blocks){if(c.e<=t0||c.s>=t1||!c.name)continue;const a=Math.max(c.s,t0),b=Math.min(c.e,t1),x=xs(a),w=(b-a)*L.k;
+      g.save();g.beginPath();g.rect(x+1,top,Math.max(0,w-2),L.HEAD);g.clip();g.fillStyle=c.s<t0?'#8a7fb0':'#d8c8ff';g.fillText(c.name,x+3,top+21);g.restore()}
+    // the system's first bar number in the margin
+    g.fillStyle='#cfd6e6';g.font='bold 12px system-ui';g.textAlign='right';g.fillText(String(t0/1920+1),L.ML-6,top+15);g.textAlign='left';
+    // your notes
+    for(const n of S.notes){if(n.s>=t1||n.s+n.l<=t0||n.p<L.lo||n.p>L.hi)continue;
+      const a=Math.max(n.s,t0),b=Math.min(n.s+n.l,t1),x=xs(a),w=Math.max(2,(b-a)*L.k),y=ry+(L.hi-n.p)*L.rh,on=sel.has(n);
+      g.fillStyle=on?'rgba(255,255,255,.6)':`rgba(110,231,255,${.3+.45*n.v/127})`;g.fillRect(x,y,w,Math.max(1,L.rh-1));
+      if(L.rh>=5){g.strokeStyle=on?'#fff':'#6ee7ff';g.lineWidth=1;g.strokeRect(x+.5,y+.5,w-1,L.rh-2)}}
+    // the arpeggio it plays
+    if(showArp){let a=0,b=ARP.length;while(a<b){const m=(a+b)>>1;if(ARP[m].t<t0)a=m+1;else b=m}
+      for(let j=a;j<ARP.length&&ARP[j].t<t1;j++){const e=ARP[j];if(e.p<L.lo||e.p>L.hi)continue;
+        const x=xs(e.t),w=Math.max(1.5,Math.min(e.d,t1-e.t)*L.k-1),y=ry+(L.hi-e.p)*L.rh,hot=P.playing&&pos>=e.t&&pos<e.t+e.d,on=selArp.size&&selArp.has(arpKey(e));
+        g.fillStyle=hot?'#fff':on?'#ffe7b0':`rgba(255,122,217,${.35+.6*e.v/127})`;g.fillRect(x,y+(L.rh>5?1:0),w,Math.max(1,L.rh-(L.rh>5?2:0)))}}
+    // end of the song inside the last system
+    if(t1<t0+L.span){const ex=xs(t1);g.fillStyle='rgba(0,0,0,.6)';g.fillRect(ex,top,L.W-L.MR-ex,L.HEAD+sh);g.fillStyle='#ff7ad9';g.fillRect(ex,top,2,L.HEAD+sh)}
+    // section, selection box, playhead
+    if(secRange){const a=Math.max(Math.min(secRange.a,secRange.b),t0),b=Math.min(Math.max(secRange.a,secRange.b),t1);if(b>a){g.fillStyle='rgba(255,184,107,.1)';g.fillRect(xs(a),ry,(b-a)*L.k,sh)}}
+    if(marq){const ta=Math.min(marq.x0,marq.x1)/L.k,tb=Math.max(marq.x0,marq.x1)/L.k,a=Math.max(ta,t0),b=Math.min(tb,t1);
+      if(b>a){const pHi=HI-Math.floor(Math.min(marq.y0,marq.y1)/ROWH),pLo=HI-Math.floor(Math.max(marq.y0,marq.y1)/ROWH);
+        const yA=ry+(L.hi-clamp(pHi,L.lo,L.hi))*L.rh,yB=ry+(L.hi-clamp(pLo,L.lo,L.hi)+1)*L.rh;
+        g.strokeStyle='#ffb86b';g.setLineDash([4,3]);g.strokeRect(xs(a)+.5,yA+.5,(b-a)*L.k,yB-yA);g.setLineDash([])}}
+    if(pos>=t0&&pos<t1){g.fillStyle='#ffb86b';g.fillRect(xs(pos),top,1.5,L.HEAD+sh)}
+    g.strokeStyle='#232a3a';g.lineWidth=1;g.strokeRect(L.ML+.5,top+.5,IW-1,L.HEAD+sh-1);
+  }
+}
+// clicks/taps on the sheet go to the roll's own editing code (it reads positions through gridPt -> sheetPt)
+sheetCv.addEventListener('mousedown',e=>{
+  const L=SHL||sheetGeom(),pt=sheetPt(e);
+  if(pt.margin)return;
+  if(pt.head){focusArea='ruler';seek(Math.round(pt.t/TPQ)*TPQ);return}   // the strip above a system moves the playhead
+  if(pt.p<L.lo||pt.p>L.hi)return;
+  gridCv.dispatchEvent(new MouseEvent('mousedown',{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY,button:e.button,buttons:e.buttons,
+    shiftKey:e.shiftKey,ctrlKey:e.ctrlKey,altKey:e.altKey,metaKey:e.metaKey,cancelable:true}));
+});
+sheetCv.addEventListener('contextmenu',e=>e.preventDefault());
+sheetCv.addEventListener('mousemove',e=>{if(drag)return;const L=SHL||sheetGeom(),pt=sheetPt(e);
+  if(pt.head){sheetCv.style.cursor='pointer';return}
+  const n=pt.p>=L.lo&&pt.p<=L.hi?noteAt(pt.t,pt.p):null;
+  sheetCv.style.cursor=!n?(tool==='select'?'default':'crosshair'):(pt.x>(n.s+n.l)*L.k-6&&n.l*L.k>10?'ew-resize':'pointer')});
+sheetWrap.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();SH.rh=clamp((+SH.rh||5)+(e.deltaY<0?1:-1),2,14);$('shRh').value=SH.rh;saveSH()},{passive:false});
+// settings + switching between the roll and the sheet
+$('shBps').value=String(+SH.bps||0);$('shRh').value=+SH.rh||5;
+$('shBps').onchange=()=>{SH.bps=+$('shBps').value;saveSH()};
+$('shRh').oninput=()=>{SH.rh=+$('shRh').value;saveSH()};
+function setView(sheet){
+  SH.on=!!sheet;saveSH();
+  document.body.classList.toggle('sheetMode',SH.on);$('sheetBox').hidden=!SH.on;
+  $('vRoll').classList.toggle('on',!SH.on);$('vSheet').classList.toggle('on',SH.on);
+  if(SH.on){fitSheet();const L=sheetGeom();sheetWrap.scrollTop=Math.max(0,Math.floor(curPos()/L.span)*(L.sysH+L.GAP))}   // open at the system with the playhead
+  else{SHL=null;applyRoll();layout();scroller.scrollLeft=Math.max(0,curPos()*ppt()-40)}
+  if(window.updBars)updBars();
+}
+$('vRoll').onclick=()=>setView(false);$('vSheet').onclick=()=>setView(true);
+setTimeout(()=>{if(SH.on&&S)setView(true)},0);   // reopen in the sheet if that's where you left it
+
 /* ---------- touch on the roll: one finger draws/edits (passed on as mouse events), two fingers scroll + pinch to zoom ---------- */
 (function(){
-  const canv=[...document.querySelectorAll('.roll canvas')];
+  const canv=[...document.querySelectorAll('.roll canvas, #sheetCv')];
   const send=(type,target,src)=>target.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,view:window,clientX:src.clientX,clientY:src.clientY,
     screenX:src.screenX,screenY:src.screenY,button:0,buttons:type==='mouseup'?0:1,shiftKey:!!src.shiftKey,ctrlKey:!!src.ctrlKey,altKey:!!src.altKey,metaKey:!!src.metaKey}));
   const pts=new Map();let one=null,pan=null;
@@ -3562,11 +3694,16 @@ function takeUI(d){
       pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY});
       if(pts.size===1){one={id:e.pointerId,el:cv,down:e,last:e,sent:false,keys:cv===keysCv,moved:false,py:e.clientY};if(!one.keys)one.timer=setTimeout(startOne,HOLD)}
       else if(pts.size===2){if(one&&one.sent)endOne();else if(one){clearTimeout(one.timer);one=null}
-        const c=mid();pan={x:c.x,y:c.y,d:spread(),zoom:S.view.zoom,rowH:ROWH}}
+        const c=mid();pan={x:c.x,y:c.y,d:spread(),zoom:S.view.zoom,rowH:ROWH,rh:+SH.rh||5,bps:SHL?SHL.bps:8}}
     });
     cv.addEventListener('pointermove',e=>{
       if(e.pointerType==='mouse'||!pts.has(e.pointerId))return;
       pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY});
+      if(pan&&cv===sheetCv){if(pts.size>=2){const c=mid(),d=spread();sheetWrap.scrollTop-=c.y-pan.y;pan.x=c.x;pan.y=c.y;
+          if(pan.d.y>40&&d.y>20){const h=clamp(Math.round(pan.rh*d.y/pan.d.y),2,14);if(h!==SH.rh){SH.rh=h;$('shRh').value=h;saveSH()}}   // pinch up/down: taller rows
+          if(pan.d.x>60&&d.x>20){const want=pan.bps*pan.d.x/d.x,nb=[1,2,3,4,6,8,12,16,24,32].reduce((a,b)=>Math.abs(b-want)<Math.abs(a-want)?b:a);   // pinch sideways: fewer/more bars per system
+            if(nb!==(SHL?SHL.bps:0)){SH.bps=nb;$('shBps').value=String(nb);saveSH()}}}
+        return}
       if(pan){if(pts.size>=2){const c=mid();scroller.scrollLeft-=c.x-pan.x;scroller.scrollTop-=c.y-pan.y;pan.x=c.x;pan.y=c.y;
           const d=spread(),r=scroller.getBoundingClientRect();
           if(pan.d.x>40&&d.x>20){const z=pan.zoom*d.x/pan.d.x;if(Math.abs(z/S.view.zoom-1)>.01)setZoom(z,c.x-r.left)}   // pinch sideways: zoom in time
@@ -3602,35 +3739,35 @@ function takeUI(d){
 })();
 
 
-/* ---------- scroll bars around the note grid: drag the thumb, or tap the bar to jump there ---------- */
+/* ---------- scroll bars (note grid + sheet): drag the thumb, or tap the bar to jump there ---------- */
 (function(){
-  const bars=[{el:$('vBar'),v:true},{el:$('hBar'),v:false}];
-  const dims=b=>({track:b.v?b.el.clientHeight:b.el.clientWidth,view:b.v?scroller.clientHeight:scroller.clientWidth,
-                  full:b.v?scroller.scrollHeight:scroller.scrollWidth,pos:b.v?scroller.scrollTop:scroller.scrollLeft});
+  const bars=[{el:$('vBar'),v:true,sc:scroller},{el:$('hBar'),v:false,sc:scroller},{el:$('shVBar'),v:true,sc:$('sheetWrap')}];
+  const dims=b=>({track:b.v?b.el.clientHeight:b.el.clientWidth,view:b.v?b.sc.clientHeight:b.sc.clientWidth,
+                  full:b.v?b.sc.scrollHeight:b.sc.scrollWidth,pos:b.v?b.sc.scrollTop:b.sc.scrollLeft});
   const thumbLen=d=>Math.min(d.track,Math.max(40,Math.round(d.track*Math.min(1,d.view/Math.max(1,d.full)))));
   const upd=()=>{for(const b of bars){const d=dims(b),len=thumbLen(d),max=Math.max(0,d.full-d.view),at=max>0?Math.round((d.track-len)*d.pos/max):0,th=b.el.firstElementChild;
     b.el.classList.toggle('full',max<=0);
     if(b.v){th.style.top=at+'px';th.style.height=len+'px'}else{th.style.left=at+'px';th.style.width=len+'px'}}};
-  const setPos=(b,x)=>{if(b.v)scroller.scrollTop=x;else scroller.scrollLeft=x};
+  const setPos=(b,x)=>{if(b.v)b.sc.scrollTop=x;else b.sc.scrollLeft=x};
   for(const b of bars){
     b.el.addEventListener('pointerdown',e=>{
       if(e.button>0)return;
       e.preventDefault();e.stopPropagation();try{b.el.setPointerCapture(e.pointerId)}catch(_){}
-      const d=dims(b),len=thumbLen(d),max=Math.max(0,d.full-d.view),per=max/Math.max(1,d.track-len);   // song pixels per bar pixel
+      const d=dims(b),len=thumbLen(d),max=Math.max(0,d.full-d.view),per=max/Math.max(1,d.track-len);   // content pixels per bar pixel
       const r=b.el.getBoundingClientRect(),p0=b.v?e.clientY-r.top:e.clientX-r.left,at=max>0?(d.track-len)*d.pos/max:0;
       if(p0<at||p0>at+len)setPos(b,clamp(p0-len/2,0,d.track-len)*per);   // tapped the bar outside the thumb: jump so the thumb centres there
-      const start=b.v?scroller.scrollTop:scroller.scrollLeft;
+      const start=b.v?b.sc.scrollTop:b.sc.scrollLeft;
       b.el.classList.add('on');
-      const mv=ev=>{const p=b.v?ev.clientY-r.top:ev.clientX-r.left;setPos(b,clamp(start+(p-p0)*per,0,max))};
+      const mv=ev=>{const q=b.v?ev.clientY-r.top:ev.clientX-r.left;setPos(b,clamp(start+(q-p0)*per,0,max))};
       const up=()=>{b.el.classList.remove('on');b.el.removeEventListener('pointermove',mv);b.el.removeEventListener('pointerup',up);b.el.removeEventListener('pointercancel',up)};
       b.el.addEventListener('pointermove',mv);b.el.addEventListener('pointerup',up);b.el.addEventListener('pointercancel',up);
     });
     b.el.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
-    b.el.addEventListener('wheel',e=>{e.preventDefault();const dl=e.deltaY||e.deltaX;if(b.v)scroller.scrollTop+=dl;else scroller.scrollLeft+=dl},{passive:false});
+    b.el.addEventListener('wheel',e=>{e.preventDefault();const dl=e.deltaY||e.deltaX;if(b.v)b.sc.scrollTop+=dl;else b.sc.scrollLeft+=dl},{passive:false});
   }
-  scroller.addEventListener('scroll',upd,{passive:true});
-  if(window.ResizeObserver){const ro=new ResizeObserver(upd);ro.observe(scroller);ro.observe(spacer)}
-  addEventListener('resize',upd);upd();
+  for(const sc of [scroller,$('sheetWrap')])sc.addEventListener('scroll',upd,{passive:true});
+  if(window.ResizeObserver){const ro=new ResizeObserver(upd);[scroller,spacer,$('sheetWrap'),$('sheetSpacer')].forEach(x=>ro.observe(x))}
+  addEventListener('resize',upd);upd();window.updBars=upd;
 })();
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
