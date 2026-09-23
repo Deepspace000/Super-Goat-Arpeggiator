@@ -1,0 +1,6 @@
+# plugin build output (about 1.6 GB) and the downloaded WebView2 SDK (get-deps.ps1 fetches it)
+plugin/build/
+plugin/build-test/
+plugin/deps/
+.vs/
+*.user
