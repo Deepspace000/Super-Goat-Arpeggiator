@@ -313,6 +313,8 @@ body{background:
 #pEnv{--h:88}       /* lime    */
 #pFx{--h:245}       /* indigo  */
 #pExp{--h:22}       /* copper  */
+#pQuant{--h:52}     /* gold    */
+#pQuant .qv{min-width:38px;text-align:right;font-variant-numeric:tabular-nums;color:hsl(var(--h),90%,75%)}
 .chLib{border:1px solid hsla(var(--h),50%,60%,.25);border-radius:8px;padding:6px 8px;margin:8px 0;background:rgba(8,10,16,.3)}
 .chLib>.bar:first-child{margin-top:0}
 .libCats{margin-top:4px}
@@ -597,7 +599,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 </div>
 <div class="sheetBox" id="sheetBox" hidden><div class="sheetBar"><b>📜 SHEET</b><label class="f">Bars per system <select id="shBps"><option value="0">Auto</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option></select></label><label class="f">Row height <input type="range" id="shRh" min="2" max="14" step="1" style="width:80px"></label><span class="shHint">Draw and edit notes just like the roll · tap the strip above a system to move the playhead</span></div><div class="sheetView"><div id="sheetWrap"><div id="sheetSpacer"><canvas id="sheetCv"></canvas></div></div><div class="rsb v" id="shVBar" title="Drag to scroll through the systems"><i></i></div></div></div>
 <div id="secBar" class="secBar"></div>
-<div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
+<div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button><button data-k="q" title="Quantise (grid set in the barn’s Quantise panel)">⌗<b> Quantise</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
 <div class="barn" id="barn">
 <div class="barnHead"><b>🐐 THE BARN</b><span>every device lives down here — scroll back up (or leave the barn) for the roll</span></div>
 <div class="hint">
@@ -619,6 +621,15 @@ body.resizing,body.resizing *{cursor:col-resize!important}
     <div class="bar"><span>Random seed</span><input type="number" id="seed" style="width:90px"><button id="reseed">🎲 New</button></div>
   </div>
 
+  <div class="panel tx-hammered" id="pQuant"><h2>Quantise</h2>
+    <div class="bar"><span>Grid</span><select id="qGrid" style="flex:1" title="The beat subdivision notes snap to"></select></div>
+    <div class="bar"><span>Move</span><label class="f" title="Snap where each note starts (it keeps its length)"><input type="checkbox" id="qStarts"> Note starts</label><label class="f" title="Snap where each note ends"><input type="checkbox" id="qEnds"> Note ends</label></div>
+    <div class="bar"><span>Strength</span><input type="range" id="qStr" min="10" max="100" step="5" style="flex:1" title="100% = right on the grid; less pulls notes only part of the way, keeping some feel"><b id="qStrV" class="qv"></b></div>
+    <div class="bar"><span>Swing</span><input type="range" id="qSwing" min="0" max="100" step="5" style="flex:1" title="Pushes every other grid line later"><b id="qSwingV" class="qv"></b></div>
+    <div class="bar"><button id="qGo" class="on" title="Quantise (Q)">⌗ Quantise</button><span id="qWhat" class="legend"></span></div>
+    <div class="bar"><label class="f" title="Notes you record with ● Rec are snapped to this grid when you stop recording"><input type="checkbox" id="qRec"> Quantise my recordings</label></div>
+    <div class="legend">Q quantises the selected notes — or every note if nothing is selected. Ctrl+Z undoes it.</div>
+  </div>
   <div class="panel tx-reeded" id="pSeg"><h2>Mode Timeline</h2>
     <div class="bar"><span>Brush</span><select id="brush"></select></div>
     <div class="bar"><span>Append</span><select id="appPat"></select><span>for</span><input type="number" id="appBeats" value="8" min="1" max="2048"><span>beats</span><button id="appBtn">+ Add</button></div>
@@ -2173,6 +2184,7 @@ window.addEventListener('keydown',e=>{
   if(!ctrl&&e.key.toLowerCase()==='b'){setTool('draw');return}
   if(!ctrl&&e.key.toLowerCase()==='v'){setTool('select');return}
   if(!ctrl&&e.key.toLowerCase()==='r'){e.preventDefault();P.rec?recStop():recStart();return}
+  if(!ctrl&&e.key.toLowerCase()==='q'){e.preventDefault();quantise();return}
   if(focusArea==='chords'&&ctrl&&e.key.toLowerCase()==='z'&&!e.shiftKey){e.preventDefault();if(!chUndoLast())undo();return}
   if(ctrl&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
   if(ctrl&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
@@ -3289,17 +3301,18 @@ function midiNoteOff(p){
 const REC={open:new Map(),undone:false};
 const recording=()=>P.rec&&P.playing;
 function recBegin(){if(!REC.undone){pushUndo();REC.undone=true}}
+const recAdd=n=>{S.notes.push(n);(REC.added||(REC.added=[])).push(n)};
 function recOpen(p,v){if(REC.open.has(p))recClose(p);const sn=MI.recSrc==='exact'?1:snapT(),total=totalTicks();let s0=Math.round(curPos()/sn)*sn;if(s0>=total)s0=0;REC.open.set(p,{s:s0,v,abs:curAbs()})}
 function recClose(p){
   const r=REC.open.get(p);if(!r)return;REC.open.delete(p);
   const exact=MI.recSrc==='exact',sn=exact?1:snapT(),total=totalTicks();
   const L=clamp(Math.round((curAbs()-r.abs)/sn)*sn,exact?30:sn,total-r.s);
-  recBegin();S.notes.push({id:nextId++,p,s:r.s,l:L,v:r.v});if(exact)recPolySeg(r.s,r.s+L);changed();
+  recBegin();recAdd({id:nextId++,p,s:r.s,l:L,v:r.v});if(exact)recPolySeg(r.s,r.s+L);changed();
 }
 function recCloseAll(){for(const p of [...REC.open.keys()])recClose(p)}
 function recExact(p,tick,len,v){
   const total=totalTicks(),s0=((Math.round(tick)%total)+total)%total,L=Math.max(10,Math.min(Math.round(len),total-s0));
-  recBegin();S.notes.push({id:nextId++,p,s:s0,l:L,v});recPolySeg(s0,s0+L);changed();
+  recBegin();recAdd({id:nextId++,p,s:s0,l:L,v});recPolySeg(s0,s0+L);changed();
 }
 // keep recorded-exact notes inside a Poly segment (extends the one it's already writing)
 function recPolySeg(a,b){
@@ -3312,9 +3325,15 @@ function recPolySeg(a,b){
 function recUI(){$('bRec').classList.toggle('on',!!P.rec);$('bRec').textContent=P.rec?'● Recording':'● Rec'}
 function recStart(){
   if(!MI.access){midiEnable();status('Recording — MIDI switched on; play your keyboard.')}
-  P.rec=true;REC.undone=false;REC.open.clear();if(!P.playing)play();recUI();
+  P.rec=true;REC.undone=false;REC.open.clear();REC.added=[];if(!P.playing)play();recUI();
 }
-function recStop(){recCloseAll();P.rec=false;S.segs.forEach(g=>delete g.recPoly);recUI();if(REC.undone){changed(true);status('Recording added — Ctrl+Z undoes the whole take.')}}
+function recStop(){
+  recCloseAll();P.rec=false;
+  let q=0;const take=(REC.added||[]).filter(n=>S.notes.includes(n));
+  if(Q.rec&&take.length){q=quantise(take,{noUndo:true,silent:true});for(const n of take)if(S.segs.some(g=>g.recPoly))recPolySeg(n.s,n.s+n.l)}   // exact takes stay inside their Poly segment
+  S.segs.forEach(g=>delete g.recPoly);recUI();REC.added=[];
+  if(REC.undone){changed(true);status('Recording added'+(q?` and quantised to ${qLabel()}`:'')+' — Ctrl+Z undoes the whole take.')}
+}
 $('bRec').onclick=()=>P.rec?recStop():recStart();
 $('bClick').onclick=()=>{S.metro=!S.metro;$('bClick').classList.toggle('on',S.metro);saveSoon()};
 
@@ -3389,7 +3408,7 @@ for(const ev of ['pointerdown','keydown'])window.addEventListener(ev,()=>{if(AC&
 // Per-viewer UI preference, so it lives in localStorage (separate from the project).
 // Panels live either in the full-width strip (LAY.wide, top to bottom) or in columns (LAY.arr).
 // Column widths: LAY.px (pixels, once the user drags a gutter) — can exceed the window; the area then scrolls sideways.
-const PANEL_IDS=['pArp','pChords','pMidi','pSeg','pPat','pSnd','pOsc','pFilt','pEnv','pFx','pExp'];
+const PANEL_IDS=['pArp','pChords','pMidi','pQuant','pSeg','pPat','pSnd','pOsc','pFilt','pEnv','pFx','pExp'];
 const panelsEl=$('panels'),panelEls=Object.fromEntries(PANEL_IDS.map(id=>[id,$(id)]));
 let LAY={cols:0,arr:null,px:null,wide:[],ph:{},collapsed:{}};
 try{Object.assign(LAY,JSON.parse(localStorage.getItem('arploom.layout'))||{})}catch(e){}
@@ -3767,7 +3786,7 @@ setTimeout(()=>{if(SH.on&&S)setView(true)},0);   // reopen in the sheet if that'
   te.querySelectorAll('button').forEach(b=>{
     b.addEventListener('pointerdown',e=>e.preventDefault());
     b.onclick=()=>{const k=b.dataset.k,del=k==='Delete';
-      document.body.dispatchEvent(new KeyboardEvent('keydown',{key:k,code:del?'Delete':'Key'+k.toUpperCase(),ctrlKey:!del,bubbles:true,cancelable:true}))};
+      document.body.dispatchEvent(new KeyboardEvent('keydown',{key:k,code:del?'Delete':'Key'+k.toUpperCase(),ctrlKey:!(del||k==='q'),bubbles:true,cancelable:true}))};
   });
 })();
 
@@ -3801,6 +3820,57 @@ setTimeout(()=>{if(SH.on&&S)setView(true)},0);   // reopen in the sheet if that'
   for(const sc of [scroller,$('sheetWrap')])sc.addEventListener('scroll',upd,{passive:true});
   if(window.ResizeObserver){const ro=new ResizeObserver(upd);[scroller,spacer,$('sheetWrap'),$('sheetSpacer')].forEach(x=>ro.observe(x))}
   addEventListener('resize',upd);upd();window.updBars=upd;
+})();
+
+
+/* ---------- quantise: snap notes to a beat subdivision ---------- */
+const Q_GRIDS=[['Straight',[[1920,'1 bar'],[960,'1/2'],[480,'1/4'],[240,'1/8'],[120,'1/16'],[60,'1/32'],[30,'1/64']]],
+  ['Triplets',[[640,'1/2 triplet'],[320,'1/4 triplet'],[160,'1/8 triplet'],[80,'1/16 triplet'],[40,'1/32 triplet']]],
+  ['Dotted',[[1440,'1/2 dotted'],[720,'1/4 dotted'],[360,'1/8 dotted'],[180,'1/16 dotted']]]];
+const Q={grid:120,starts:true,ends:false,str:100,swing:0,rec:false};
+try{Object.assign(Q,JSON.parse(localStorage.getItem('arploom.quant'))||{})}catch(e){}
+const saveQ=()=>{try{localStorage.setItem('arploom.quant',JSON.stringify(Q))}catch(e){}};
+function qLabel(){for(const [,gs] of Q_GRIDS)for(const [t,l] of gs)if(t===+Q.grid)return l;return Q.grid+' ticks'}
+// list = the notes to move (default: the selection, or every note). Returns how many moved.
+function quantise(list,opts={}){
+  const notes=list||(sel.size?[...sel]:S.notes.slice());
+  if(!notes.length){if(!opts.silent)status('Nothing to quantise — draw or select some notes first.');return 0}
+  if(!Q.starts&&!Q.ends){if(!opts.silent)status('Tick “Note starts” and/or “Note ends” to quantise.');return 0}
+  const g=+Q.grid||120,str=clamp(+Q.str||100,0,100)/100,sw=clamp(+Q.swing||0,0,100)/100,total=totalTicks();
+  const grid=t=>{const i=Math.round(t/g);return i*g+(i%2?g*sw*.5:0)};   // every other grid line is pushed late by the swing
+  if(!opts.noUndo)pushUndo();
+  let moved=0;
+  for(const n of notes){
+    const s0=n.s,e0=n.s+n.l;let a=s0,b=e0;
+    if(Q.starts){a=Math.round(s0+(grid(s0)-s0)*str);b=a+(e0-s0)}   // starts only: the note keeps its length
+    if(Q.ends){let te=grid(e0);if(te<=a)te=grid(a)+g;const fe=Math.round(e0+(te-e0)*str);b=fe>a?fe:a+Math.max(10,Math.round(g*str))}
+    a=clamp(a,0,total-10);b=clamp(b,a+10,total);
+    if(a!==s0||b!==e0){n.s=a;n.l=b-a;moved++}
+  }
+  // same pitch landing on the same spot: keep one; a note stops where the next of its pitch begins
+  const qs=new Set(notes),byP=new Map(),drop=new Set();
+  for(const n of S.notes){if(!byP.has(n.p))byP.set(n.p,[]);byP.get(n.p).push(n)}
+  for(const arr of byP.values()){arr.sort((x,y)=>x.s-y.s||y.l-x.l);let last=null;
+    for(const n of arr){if(last&&(qs.has(n)||qs.has(last))){if(n.s===last.s){drop.add(n);continue}if(last.s+last.l>n.s)last.l=Math.max(10,n.s-last.s)}last=n}}
+  if(drop.size){S.notes=S.notes.filter(n=>!drop.has(n));drop.forEach(n=>sel.delete(n))}
+  changed(true);
+  if(!opts.silent)status(`Quantised ${moved} of ${notes.length} note${notes.length===1?'':'s'} to ${qLabel()}${Q.swing?` with ${Q.swing}% swing`:''}${Q.str<100?` at ${Q.str}% strength`:''}${drop.size?` (${drop.size} doubled note${drop.size===1?'':'s'} merged)`:''}.`);
+  return moved;
+}
+(function(){
+  const gs=$('qGrid');
+  for(const [name,list] of Q_GRIDS){const og=document.createElement('optgroup');og.label=name;for(const [t,l] of list)og.append(new Option(l,t));gs.append(og)}
+  const ui=()=>{gs.value=String(Q.grid);$('qStarts').checked=!!Q.starts;$('qEnds').checked=!!Q.ends;$('qStr').value=Q.str;$('qSwing').value=Q.swing;$('qRec').checked=!!Q.rec;
+    $('qStrV').textContent=Q.str+'%';$('qSwingV').textContent=Q.swing+'%'};
+  gs.onchange=()=>{Q.grid=+gs.value;saveQ()};
+  $('qStarts').onchange=()=>{Q.starts=$('qStarts').checked;saveQ()};
+  $('qEnds').onchange=()=>{Q.ends=$('qEnds').checked;saveQ()};
+  $('qStr').oninput=()=>{Q.str=+$('qStr').value;$('qStrV').textContent=Q.str+'%';saveQ()};
+  $('qSwing').oninput=()=>{Q.swing=+$('qSwing').value;$('qSwingV').textContent=Q.swing+'%';saveQ()};
+  $('qRec').onchange=()=>{Q.rec=$('qRec').checked;saveQ()};
+  $('qGo').onclick=()=>quantise();
+  const what=()=>{const n=sel.size;$('qWhat').textContent=n?`the ${n} selected note${n===1?'':'s'}`:S&&S.notes?`all ${S.notes.length} notes`:''};
+  setInterval(what,500);ui();
 })();
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
