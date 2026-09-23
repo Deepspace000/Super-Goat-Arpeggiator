@@ -190,6 +190,22 @@ html.touch .barnBar .bbInfo{display:none}
 /* phones: the controls bar becomes one row you swipe sideways (the banner already shows the name) */
 @media (max-width:640px){body>header{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}body>header::-webkit-scrollbar{display:none}body>header>*{flex:none}body>header h1{display:none}#scope{margin-left:8px}}
 
+
+/* ---------- scroll bars around the note grid (finger-sized on touch screens; dragging them never adds notes) ---------- */
+:root{--sb:14px}
+html.touch{--sb:26px}
+.gridCell{position:relative;display:grid;grid-template-rows:minmax(0,1fr) var(--sb);grid-template-columns:minmax(0,1fr);min-width:0;min-height:0;overflow:hidden}
+.gridCell>#scroller{min-height:0;scrollbar-width:none}
+#scroller::-webkit-scrollbar{display:none}
+.rsb{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;background:rgba(10,12,18,.78);cursor:pointer}
+.rsb.h{border-top:1px solid var(--line)}
+.rsb.v{position:absolute;right:0;top:0;bottom:var(--sb);width:var(--sb);border-left:1px solid var(--line);z-index:4}
+.rsb i{position:absolute;border-radius:99px;background:linear-gradient(180deg,rgba(110,231,255,.5),rgba(60,160,200,.5));box-shadow:0 0 8px rgba(110,231,255,.22);transition:background .12s,box-shadow .12s}
+.rsb.h i{top:3px;bottom:3px}
+.rsb.v i{left:3px;right:3px}
+.rsb:hover i,.rsb.on i{background:linear-gradient(180deg,rgba(160,242,255,.92),rgba(80,190,230,.92));box-shadow:0 0 14px rgba(110,231,255,.55)}
+.rsb.full i{opacity:.3}
+
 /* ---------- goat banner ---------- */
 .goatBanner{--h:285;position:relative;display:flex;align-items:center;gap:18px;margin:10px 12px 0;padding:6px 20px 6px 10px;border-radius:14px;overflow:hidden;isolation:isolate;
   background:linear-gradient(120deg,hsla(285,85%,70%,.20),hsla(200,80%,45%,.08) 45%,hsla(330,90%,65%,.16)),rgba(12,15,22,.55);
@@ -481,7 +497,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
   <label class="f">Snap <select id="snap"></select></label>
   <span class="seg"><button id="tDraw" class="on" title="Draw tool (B): click = add note, click a note = erase">✏ Draw</button><button id="tSel" title="Select tool (V): drag a box to select chords and arp notes; drag the ruler to select a section">⬚ Select</button></span>
   <label class="f">Stamp <select id="chord"></select></label>
-  <label class="f">Zoom <input type="range" id="zoom" min="3" max="150" style="width:80px"></label>
+  <label class="f">Zoom <input type="range" id="zoom" min="0" max="1000" step="1" style="width:90px"></label><button id="bFit" title="Zoom out to see the whole song (press again to go back)">⤢ Whole song</button>
   <label class="f" title="Piano-roll row height">Rows <input type="range" id="rowH" min="6" max="48" style="width:64px"></label>
   <div class="sep"></div>
   <button id="bUndo" title="Ctrl+Z">↶</button>
@@ -499,7 +515,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
   <div class="lab" title="Chords in the roll — click to select · Shift-click = everything between · Ctrl-click = add/remove one · Shift-drag = box · drag to move · drag the right edge to resize"><b>CHORDS</b></div>
   <div class="cw lanew" id="chordW"><canvas id="chordCv"></canvas></div>
   <div class="cw" id="keysW" style="border-right:1px solid var(--line)"><canvas id="keys"></canvas></div>
-  <div id="scroller"><div id="spacer"><canvas id="grid"></canvas></div></div>
+  <div class="gridCell" id="gridCell"><div id="scroller"><div id="spacer"><canvas id="grid"></canvas></div></div><div class="rsb v" id="vBar" title="Drag to scroll up and down"><i></i></div><div class="rsb h" id="hBar" title="Drag to scroll through the song"><i></i></div></div>
   <div class="lab"><b>DYNAMICS</b>per note</div>
   <div class="cw lanew" id="velW"><canvas id="velCv"></canvas></div>
   <div class="lab" title="Volume over time — draw it across the whole arpeggio"><b>VOLUME</b>
@@ -1343,6 +1359,14 @@ const scroller=$('scroller'),spacer=$('spacer'),gridCv=$('grid'),rulerCv=$('rule
 const gx=gridCv.getContext('2d'),rx=rulerCv.getContext('2d'),kx=keysCv.getContext('2d'),vx=velCv.getContext('2d'),px=profCv.getContext('2d');
 let DPR=1,GW=0,GH=0;
 const ppt=()=>S.view.zoom/STEP;
+// zoom = pixels per 16th note: from 0.1 (a 512-bar song fits on screen) to 150; the slider is logarithmic
+const ZMIN=.1,ZMAX=150;
+const zoomToSlider=z=>Math.round(1000*Math.log(clamp(z,ZMIN,ZMAX)/ZMIN)/Math.log(ZMAX/ZMIN));
+const sliderToZoom=v=>ZMIN*Math.pow(ZMAX/ZMIN,clamp(v,0,1000)/1000);
+function setZoom(z,anchorX){   // anchorX = the spot in the grid (px from its left edge) that stays put; default the middle
+  if(anchorX==null)anchorX=GW/2;const t=(scroller.scrollLeft+anchorX)/ppt();
+  S.view.zoom=clamp(z,ZMIN,ZMAX);$('zoom').value=zoomToSlider(S.view.zoom);layout();scroller.scrollLeft=t*ppt()-anchorX;saveSoon();
+}
 function sizeCv(cv,ctx,w,h){cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);cv.style.width=w+'px';cv.style.height=h+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}
 function layout(){
   if(!S)return;
@@ -1425,10 +1449,12 @@ function drawGrid(){
     g.fillStyle=isBlack(p)?'#0b0d12':'#11141b';g.fillRect(0,y,W,ROWH);
     if(p%12===0){g.fillStyle='#232a3a';g.fillRect(0,y+ROWH-1,W,1)}}
   for(const s of S.segs){const x=s.s*k-sx,w=s.l*k;if(x>W||x+w<0)continue;g.fillStyle=`hsla(${patHue(s.pat)},70%,60%,.05)`;g.fillRect(x,0,w,H)}
-  const sn=snapT(),minor=sn*k>=6?sn:(STEP*k>=6?STEP:TPQ);
+  const sn=snapT();let minor=sn*k>=6?sn:STEP*k>=6?STEP:TPQ*k>=6?TPQ:1920;
+  while(minor*k<6)minor*=2;   // zoomed far out: a line every 2, 4, 8… bars
+  const major=minor>=1920?minor*4:1920;
   for(let t=Math.floor(sx/k/minor)*minor;t*k-sx<W;t+=minor){
     const x=Math.round(t*k-sx)+.5;
-    g.fillStyle=t%1920===0?'#39425a':t%TPQ===0?'#232939':'#181c27';g.fillRect(x,0,1,H);
+    g.fillStyle=t%major===0?(minor>=1920?'#4a5575':'#39425a'):t%1920===0?'#39425a':t%TPQ===0?'#232939':'#181c27';g.fillRect(x,0,1,H);
   }
   const ex=total*k-sx;if(ex<W){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(ex,0,W-ex,H);g.fillStyle='#ff7ad9';g.fillRect(ex,0,2,H)}
   // source notes
@@ -1468,8 +1494,8 @@ function drawKeys(){
 function drawRuler(){
   const g=rx,W=rulerCv.width/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks();
   g.fillStyle='#10131a';g.fillRect(0,0,W,50);g.fillStyle='#0c0e14';g.fillRect(0,20,W,30);
-  const barPx=1920*k,every=barPx<26?Math.ceil(26/barPx):1;
-  for(let b=Math.floor(sx/barPx);b*barPx-sx<W&&b<=S.bars;b++){
+  const barPx=1920*k;let every=1,tick=1;while(every*barPx<26)every*=2;while(tick*barPx<5)tick*=2;
+  for(let b=Math.floor(sx/barPx/tick)*tick;b*barPx-sx<W&&b<=S.bars;b+=tick){
     const x=b*1920*k-sx;g.fillStyle='#39425a';g.fillRect(x,0,1,20);
     if(b%every===0&&b<S.bars){g.fillStyle='#8490a8';g.font='10px system-ui';g.fillText(b+1,x+3,13)}
     if(barPx>60)for(let q=1;q<4;q++){g.fillStyle='#232939';g.fillRect(x+q*TPQ*k,12,1,8)}
@@ -1495,6 +1521,8 @@ function drawRuler(){
   const hx=curPos()*k-sx;if(hx>=-6&&hx<=W){g.fillStyle='#ffb86b';g.beginPath();g.moveTo(hx-5,0);g.lineTo(hx+5,0);g.lineTo(hx,8);g.fill();g.fillRect(hx,0,1.5,50)}
 }
 // each drawing lane has its own colour: a tinted glassy background with a bright top rim
+function laneBars(g,sx,k,W,H){let n=1;while(n*1920*k<6)n*=2;g.fillStyle='#1c2130';
+  for(let b=Math.floor(sx/(1920*k*n))*n;b*1920*k-sx<W&&b<=S.bars;b+=n)g.fillRect(b*1920*k-sx,0,1,H)}
 function laneBg(g,W,H,h){
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,`hsla(${h},75%,24%,1)`);gr.addColorStop(.5,`hsla(${h},60%,12%,1)`);gr.addColorStop(1,`hsla(${h},65%,7%,1)`);
   g.fillStyle=gr;g.fillRect(0,0,W,H);g.fillStyle=`hsla(${h},95%,72%,.45)`;g.fillRect(0,0,W,1);
@@ -1514,7 +1542,7 @@ function drawVel(){
 function drawProf(){
   const g=px,W=profCv.width/DPR,H=profCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks();
   laneBg(g,W,H,320);
-  for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+  laneBars(g,sx,k,W,H)
   const top=4,hh=H-8,i0=Math.max(0,Math.floor(sx/(STEP*k))),i1=Math.min(S.prof.length,Math.ceil((sx+W)/(STEP*k))+1);
   const grd=g.createLinearGradient(0,top,0,H);grd.addColorStop(0,'rgba(255,122,217,.55)');grd.addColorStop(1,'rgba(110,231,255,.12)');
   g.fillStyle=grd;g.beginPath();g.moveTo(i0*STEP*k-sx,H);
@@ -1530,7 +1558,7 @@ const fltCv=$('fltCv'),fltG=fltCv.getContext('2d');
 function drawFlt(){
   const g=fltG,W=fltCv.width/DPR,H=fltCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks(),A=S.fprof;
   laneBg(g,W,H,100);
-  for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+  laneBars(g,sx,k,W,H)
   const top=4,hh=H-8,mid=top+hh/2,Y=v=>top+hh*(1-v),i0=Math.max(0,Math.floor(sx/(STEP*k))),i1=Math.min(A.length,Math.ceil((sx+W)/(STEP*k))+1);
   g.fillStyle='#2a3142';g.fillRect(0,Math.round(mid),W,1);
   for(let i=i0;i<i1;i++){const v=A[i],y=Y(v),x=i*STEP*k-sx,w=STEP*k;
@@ -1587,7 +1615,7 @@ function blocksNow(){const sig=S.notes.length+':'+S.notes.reduce((a,n)=>a+n.s*7+
 function drawChords(){
   const g=chG,W=chordCv.width/DPR,H=chordCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks(),pos=curPos();
   g.fillStyle='#0b0d12';g.fillRect(0,0,W,H);
-  for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+  laneBars(g,sx,k,W,H)
   // stack overlapping bars onto two rows so they stay readable
   let lastEnd=[-1,-1];
   for(const b of blocksNow()){
@@ -1649,7 +1677,7 @@ const fmtCents=c=>Math.abs(c)>=100?(c>=0?'+':'')+(c/100).toFixed(Math.abs(c)%100
 function drawTune(){
   const g=tuneG,W=tuneCv.width/DPR,H=tuneCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks(),A=S.tprof;
   laneBg(g,W,H,270);
-  for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+  laneBars(g,sx,k,W,H)
   const top=4,hh=H-8,mid=top+hh/2,Y=v=>top+hh*(1-v),i0=Math.max(0,Math.floor(sx/(STEP*k))),i1=Math.min(A.length,Math.ceil((sx+W)/(STEP*k))+1);
   // semitone grid lines when the range is big enough to show them
   const R=S.tune.range;if(R>=100){g.fillStyle='rgba(197,160,255,.10)';for(let c=100;c<R;c+=100){const d=hh/2*c/R;g.fillRect(0,mid-d,W,1);g.fillRect(0,mid+d,W,1)}}
@@ -1710,7 +1738,7 @@ const fmtPan=v=>{const x=Math.round((v-.5)*200);return Math.abs(x)<2?'C':(x<0?'L
 function drawPan(){
   const g=panG,W=panCv.width/DPR,H=panCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks(),A=S.pprof;
   laneBg(g,W,H,42);
-  for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+  laneBars(g,sx,k,W,H)
   const top=4,hh=H-8,mid=top+hh/2,Y=v=>top+hh*(1-v),i0=Math.max(0,Math.floor(sx/(STEP*k))),i1=Math.min(A.length,Math.ceil((sx+W)/(STEP*k))+1);
   g.fillStyle='#2a3142';g.fillRect(0,Math.round(mid),W,1);
   for(let i=i0;i<i1;i++){const v=A[i],y=Y(v),x=i*STEP*k-sx;g.fillStyle=v>=.5?`rgba(255,209,102,${.12+.6*(v-.5)})`:`rgba(102,217,255,${.12+.6*(.5-v)})`;g.fillRect(x,Math.min(y,mid),STEP*k,Math.abs(mid-y)||1)}
@@ -1758,7 +1786,7 @@ function makeLane(o){
   function draw(){
     const A=arr(),W=cv.width/DPR,H=cv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks();
     laneBg(g,W,H,o.hue||200);
-    for(let b=Math.floor(sx/(1920*k));b*1920*k-sx<W&&b<=S.bars;b++){g.fillStyle='#1c2130';g.fillRect(b*1920*k-sx,0,1,H)}
+    laneBars(g,sx,k,W,H)
     const top=4,hh=H-8,base=o.mid!=null?top+hh*(1-o.mid):H-4,Y=v=>top+hh*(1-v),i0=Math.max(0,Math.floor(sx/(STEP*k))),i1=Math.min(A.length,Math.ceil((sx+W)/(STEP*k))+1);
     g.fillStyle='#2a3142';g.fillRect(0,Math.round(base),W,1);
     if(o.levels){g.fillStyle='rgba(255,255,255,.05)';for(let l=1;l<o.levels;l++)g.fillRect(0,Math.round(Y(l/(o.levels-1))),W,1)}
@@ -1903,7 +1931,7 @@ function removeNotes(list){const set=new Set(list);S.notes=S.notes.filter(n=>!se
 scroller.addEventListener('wheel',e=>{
   if(!e.ctrlKey)return;e.preventDefault();
   const r=scroller.getBoundingClientRect(),mx=e.clientX-r.left,t=(mx+scroller.scrollLeft)/ppt();
-  S.view.zoom=clamp(S.view.zoom*(e.deltaY<0?1.15:1/1.15),3,150);$('zoom').value=S.view.zoom;layout();scroller.scrollLeft=t*ppt()-mx;
+  setZoom(S.view.zoom*(e.deltaY<0?1.15:1/1.15),mx);
 },{passive:false});
 for(const w of ['rulerW','chordW','velW','profW','fltW','tuneW','panW','artW','porW','rateW'])$(w).addEventListener('wheel',e=>{scroller.scrollLeft+=e.deltaX||e.deltaY;e.preventDefault()},{passive:false});
 keysCv.addEventListener('mousedown',e=>{const r=keysCv.getBoundingClientRect(),p=HI-Math.floor((e.clientY-r.top+scroller.scrollTop)/ROWH);keyHi=p;previewNote(p);setTimeout(()=>{if(keyHi===p)keyHi=-1},250)});
@@ -2225,7 +2253,7 @@ function fillPatSelects(){
 }
 function refreshAll(){
   refreshers.forEach(f=>f());fillPatSelects();
-  $('bpm').value=S.bpm;$('bars').value=S.bars;$('snap').value=S.view.snap;$('chord').value=S.view.chord;$('zoom').value=S.view.zoom;
+  $('bpm').value=S.bpm;$('bars').value=S.bars;$('snap').value=S.view.snap;$('chord').value=S.view.chord;$('zoom').value=zoomToSlider(S.view.zoom);
   $('tuneRange').value=tuneRangeIdx();
   $('seed').value=S.seed;$('retrig').checked=S.arp.retrig;$('polyOn').checked=!!S.arp.poly;$('bLoop').classList.toggle('on',S.loop);$('bClick').classList.toggle('on',!!S.metro);renderPresetList();
   renderSegPanel();renderCP();drawEnv();chRefresh();
@@ -2506,7 +2534,13 @@ $('bpm').onchange=()=>{S.bpm=clamp(+$('bpm').value||120,30,300);$('bpm').value=S
 $('bars').onchange=()=>{pushUndo();S.bars=clamp(+$('bars').value|0||1,1,512);$('bars').value=S.bars;fixProfile();layout();changed(true)};
 $('snap').onchange=()=>{S.view.snap=+$('snap').value;saveSoon()};
 $('chord').onchange=()=>{S.view.chord=$('chord').value;saveSoon()};
-$('zoom').oninput=()=>{const c=(scroller.scrollLeft+GW/2)/ppt();S.view.zoom=+$('zoom').value;layout();scroller.scrollLeft=c*ppt()-GW/2;saveSoon()};
+$('zoom').oninput=()=>setZoom(sliderToZoom(+$('zoom').value));
+let fitPrev=null;
+$('bFit').onclick=()=>{   // whole song on screen; press again to go back to where you were
+  const fit=clamp((GW-24)/(totalTicks()/STEP),ZMIN,ZMAX);
+  if(fitPrev&&Math.abs(S.view.zoom/fit-1)<.02){const f=fitPrev;fitPrev=null;setZoom(f.z,0);scroller.scrollLeft=f.x;return}
+  fitPrev={z:S.view.zoom,x:scroller.scrollLeft};setZoom(fit,0);scroller.scrollLeft=0;
+};
 $('retrig').onchange=()=>{S.arp.retrig=$('retrig').checked;changed()};
 $('polyOn').onchange=()=>{S.arp.poly=$('polyOn').checked;changed(true)};
 $('seed').onchange=()=>{S.seed=+$('seed').value|0;changed()};
@@ -3520,7 +3554,7 @@ function takeUI(d){
   const startOne=()=>{if(!one||one.sent)return;one.sent=true;clearTimeout(one.timer);send('mousedown',one.el,one.down);if(one.last!==one.down)send('mousemove',one.el,one.last)};
   const endOne=()=>{if(!one)return;clearTimeout(one.timer);if(one.sent)send('mouseup',one.el,one.last);one=null};
   const mid=()=>{let x=0,y=0;for(const q of pts.values()){x+=q.clientX;y+=q.clientY}return{x:x/pts.size,y:y/pts.size}};
-  const spread=()=>{const a=[...pts.values()];return a.length<2?0:Math.abs(a[0].clientX-a[1].clientX)};
+  const spread=()=>{const a=[...pts.values()];return a.length<2?{x:0,y:0}:{x:Math.abs(a[0].clientX-a[1].clientX),y:Math.abs(a[0].clientY-a[1].clientY)}};
   for(const cv of canv){
     cv.addEventListener('pointerdown',e=>{
       if(e.pointerType==='mouse')return;
@@ -3528,13 +3562,15 @@ function takeUI(d){
       pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY});
       if(pts.size===1){one={id:e.pointerId,el:cv,down:e,last:e,sent:false,keys:cv===keysCv,moved:false,py:e.clientY};if(!one.keys)one.timer=setTimeout(startOne,HOLD)}
       else if(pts.size===2){if(one&&one.sent)endOne();else if(one){clearTimeout(one.timer);one=null}
-        const c=mid();pan={x:c.x,y:c.y,d:spread(),zoom:+$('zoom').value}}
+        const c=mid();pan={x:c.x,y:c.y,d:spread(),zoom:S.view.zoom,rowH:ROWH}}
     });
     cv.addEventListener('pointermove',e=>{
       if(e.pointerType==='mouse'||!pts.has(e.pointerId))return;
       pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY});
       if(pan){if(pts.size>=2){const c=mid();scroller.scrollLeft-=c.x-pan.x;scroller.scrollTop-=c.y-pan.y;pan.x=c.x;pan.y=c.y;
-          const d=spread(),zi=$('zoom');if(pan.d>40&&d>40){const z=clamp(Math.round(pan.zoom*d/pan.d),+zi.min,+zi.max);if(z!==+zi.value){zi.value=z;zi.oninput()}}}
+          const d=spread(),r=scroller.getBoundingClientRect();
+          if(pan.d.x>40&&d.x>20){const z=pan.zoom*d.x/pan.d.x;if(Math.abs(z/S.view.zoom-1)>.01)setZoom(z,c.x-r.left)}   // pinch sideways: zoom in time
+          if(pan.d.y>40&&d.y>20&&(cv===gridCv||cv===keysCv)){const h=Math.round(pan.rowH*d.y/pan.d.y);if(h!==ROWH){const py=c.y-r.top,row=(scroller.scrollTop+py)/ROWH;setRowH(h);scroller.scrollTop=row*ROWH-py;$('rowH').value=ROWH}}}   // pinch up/down: taller/shorter rows
         return}
       if(!one||one.id!==e.pointerId)return;
       one.last=e;
@@ -3563,6 +3599,38 @@ function takeUI(d){
     b.onclick=()=>{const k=b.dataset.k,del=k==='Delete';
       document.body.dispatchEvent(new KeyboardEvent('keydown',{key:k,code:del?'Delete':'Key'+k.toUpperCase(),ctrlKey:!del,bubbles:true,cancelable:true}))};
   });
+})();
+
+
+/* ---------- scroll bars around the note grid: drag the thumb, or tap the bar to jump there ---------- */
+(function(){
+  const bars=[{el:$('vBar'),v:true},{el:$('hBar'),v:false}];
+  const dims=b=>({track:b.v?b.el.clientHeight:b.el.clientWidth,view:b.v?scroller.clientHeight:scroller.clientWidth,
+                  full:b.v?scroller.scrollHeight:scroller.scrollWidth,pos:b.v?scroller.scrollTop:scroller.scrollLeft});
+  const thumbLen=d=>Math.min(d.track,Math.max(40,Math.round(d.track*Math.min(1,d.view/Math.max(1,d.full)))));
+  const upd=()=>{for(const b of bars){const d=dims(b),len=thumbLen(d),max=Math.max(0,d.full-d.view),at=max>0?Math.round((d.track-len)*d.pos/max):0,th=b.el.firstElementChild;
+    b.el.classList.toggle('full',max<=0);
+    if(b.v){th.style.top=at+'px';th.style.height=len+'px'}else{th.style.left=at+'px';th.style.width=len+'px'}}};
+  const setPos=(b,x)=>{if(b.v)scroller.scrollTop=x;else scroller.scrollLeft=x};
+  for(const b of bars){
+    b.el.addEventListener('pointerdown',e=>{
+      if(e.button>0)return;
+      e.preventDefault();e.stopPropagation();try{b.el.setPointerCapture(e.pointerId)}catch(_){}
+      const d=dims(b),len=thumbLen(d),max=Math.max(0,d.full-d.view),per=max/Math.max(1,d.track-len);   // song pixels per bar pixel
+      const r=b.el.getBoundingClientRect(),p0=b.v?e.clientY-r.top:e.clientX-r.left,at=max>0?(d.track-len)*d.pos/max:0;
+      if(p0<at||p0>at+len)setPos(b,clamp(p0-len/2,0,d.track-len)*per);   // tapped the bar outside the thumb: jump so the thumb centres there
+      const start=b.v?scroller.scrollTop:scroller.scrollLeft;
+      b.el.classList.add('on');
+      const mv=ev=>{const p=b.v?ev.clientY-r.top:ev.clientX-r.left;setPos(b,clamp(start+(p-p0)*per,0,max))};
+      const up=()=>{b.el.classList.remove('on');b.el.removeEventListener('pointermove',mv);b.el.removeEventListener('pointerup',up);b.el.removeEventListener('pointercancel',up)};
+      b.el.addEventListener('pointermove',mv);b.el.addEventListener('pointerup',up);b.el.addEventListener('pointercancel',up);
+    });
+    b.el.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+    b.el.addEventListener('wheel',e=>{e.preventDefault();const dl=e.deltaY||e.deltaX;if(b.v)scroller.scrollTop+=dl;else scroller.scrollLeft+=dl},{passive:false});
+  }
+  scroller.addEventListener('scroll',upd,{passive:true});
+  if(window.ResizeObserver){const ro=new ResizeObserver(upd);ro.observe(scroller);ro.observe(spacer)}
+  addEventListener('resize',upd);upd();
 })();
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
