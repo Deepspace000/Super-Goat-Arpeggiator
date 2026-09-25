@@ -253,6 +253,28 @@ html.touch #cloneBtn{padding:6px 12px;font-size:14px}
 .bmRow button{min-width:58px}
 .blkMenu>button{display:block;width:100%;text-align:left;margin:4px 0;padding:6px 10px;font-size:13.5px}
 
+
+/* ---------- your pieces: a library of songs kept in this browser ---------- */
+#pieceBtn{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#pieceBtn .unsaved{color:#ffb86b;font-weight:400}
+.pieceCard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:46;width:min(560px,calc(100vw - 24px));max-height:min(78vh,720px);display:flex;flex-direction:column;
+  box-sizing:border-box;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(30,28,48,.98),rgba(15,16,26,.98));border:1px solid rgba(199,155,255,.5);
+  box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 30px rgba(199,155,255,.14);color:var(--txt)}
+.pieceCard[hidden]{display:none}
+.pcHead{display:flex;align-items:center;margin-bottom:10px}.pcHead b{letter-spacing:.12em;color:#e2d2ff}.pcHead button{margin-left:auto;padding:2px 10px}
+.pcRow{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}.pcRow>span{color:var(--dim);min-width:74px}
+#pcTitle{flex:1;min-width:140px;font-size:16px;padding:5px 8px}
+.pcInfo{font-size:12px;color:var(--dim);margin:2px 0 8px}
+.pcList{flex:1;min-height:80px;overflow-y:auto;margin:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 0}
+.pcItem{display:flex;align-items:center;gap:6px;padding:7px 6px;border-radius:9px}
+.pcItem:hover{background:rgba(255,255,255,.04)}
+.pcItem.cur{background:rgba(199,155,255,.10);box-shadow:inset 3px 0 0 #c79bff}
+.pcTxt{flex:1;min-width:0;display:flex;flex-direction:column}.pcTxt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pcTxt small{color:var(--dim);font-size:11.5px}
+.pcItem button{padding:4px 10px}
+.pcEmpty{color:var(--dim);font-size:13px;padding:14px 6px}
+.pcFoot{display:flex;gap:8px;flex-wrap:wrap}
+.pcNote{font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.35}
+
 /* ---------- goat banner ---------- */
 .goatBanner{--h:285;position:relative;display:flex;align-items:center;gap:18px;margin:10px 12px 0;padding:6px 20px 6px 10px;border-radius:14px;overflow:hidden;isolation:isolate;
   background:linear-gradient(120deg,hsla(285,85%,70%,.20),hsla(200,80%,45%,.08) 45%,hsla(330,90%,65%,.16)),rgba(12,15,22,.55);
@@ -533,6 +555,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 </div>
 <header>
   <h1 title="Super Goat Arpeggiator, by Goat Bleats"><small>🐐 GOAT BLEATS</small><span style="color:var(--acc)">SUPER GOAT <span>ARPEGGIATOR</span></span></h1>
+  <button id="pieceBtn" title="Your pieces — save, open, start a new one (Ctrl+S saves)">🎼 <span id="pieceName">Untitled piece</span> ▾</button>
   <button id="bPlay" class="play">▶ Play</button>
   <button id="bRec" title="Record from your MIDI keyboard (R)">● Rec</button>
   <button id="bRew" title="Back to start">⏮</button>
@@ -636,6 +659,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 <div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><button id="cloneBtn" title="Copy a range of bars to another bar, lined up exactly">⧉ Clone bars</button><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button><button data-k="q" title="Quantise (grid set in the barn’s Quantise panel)">⌗<b> Quantise</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
 <div class="cloneCard" id="cloneCard" hidden><div class="ccHead"><b>⧉ CLONE BARS</b><button id="ccClose" title="Close (Esc)">✕</button></div><div class="ccRow"><span>Bars</span><span class="ccNum"><button data-step="-1" data-for="ccFrom" title="One less">−</button><input id="ccFrom" type="number" inputmode="numeric" min="1" max="512" step="1" title="First bar to copy"><button data-step="1" data-for="ccFrom" title="One more">+</button></span><span style="min-width:0">to</span><span class="ccNum"><button data-step="-1" data-for="ccTo" title="One less">−</button><input id="ccTo" type="number" inputmode="numeric" min="1" max="512" step="1" title="Last bar to copy"><button data-step="1" data-for="ccTo" title="One more">+</button></span></div><div class="ccRow"><span>Paste at bar</span><span class="ccNum"><button data-step="-1" data-for="ccAt" title="One less">−</button><input id="ccAt" type="number" inputmode="numeric" min="1" max="512" step="1" title="Where the copy starts"><button data-step="1" data-for="ccAt" title="One more">+</button></span></div><div class="ccRow"><span>Copies</span><span class="ccNum"><button data-step="-1" data-for="ccTimes" title="One less">−</button><input id="ccTimes" type="number" inputmode="numeric" min="1" max="512" step="1" title="How many copies, one after another"><button data-step="1" data-for="ccTimes" title="One more">+</button></span></div><div class="ccRow"><label class="f" title="Copy the arp pattern changes in those bars too"><input type="checkbox" id="ccSegs"> Arp timeline</label><label class="f" title="Copy the volume, filter, tuning, pan, articulation, glide and rate lanes too"><input type="checkbox" id="ccLanes"> Drawn lanes</label></div><div class="ccInfo" id="ccInfo"></div><button id="ccGo" class="on">⧉ Clone</button></div>
 <div class="blkMenu" id="blkMenu" hidden><div class="bmHead" id="bmHead"></div><div class="bmRow"><span>Move to bar</span><input id="bmMove" type="number" inputmode="numeric" min="1" max="512"><button id="bmMoveGo">Move</button></div><div class="bmRow"><span>Length (bars)</span><input id="bmLen" type="number" inputmode="numeric" min="1" max="512" title="Longer = the section repeats; shorter = it’s cut"><button id="bmLenGo">Set</button></div><div class="bmRow"><span>Copy to bar</span><input id="bmCopyTo" type="number" inputmode="numeric" min="1" max="512"><button id="bmCopyGo">Copy</button></div><button id="bmDup">⧺ Duplicate (right after it)</button><button id="bmRename">✎ Rename…</button><button id="bmDel" class="danger">🗑 Delete section</button></div>
+<div class="pieceCard" id="pieceCard" hidden><div class="pcHead"><b>🎼 YOUR PIECES</b><button id="pcClose" title="Close (Esc)">✕</button></div><div class="pcRow"><span>This piece</span><input id="pcTitle" type="text" maxlength="60" placeholder="Give it a name…"><button id="pcSave" class="on" title="Ctrl+S">💾 Save</button></div><div class="pcInfo" id="pcInfo"></div><div class="pcRow"><button id="pcNew" title="Start an empty piece (this one is saved first)">＋ New piece</button></div><div class="pcList" id="pcList"></div><div class="pcFoot"><button id="pcBackup" title="Save every piece into one file">⤓ Back up all pieces</button><button id="pcRestore" title="Bring pieces back from a backup (or open a project file as a piece)">⤒ Restore a backup…</button><input type="file" id="pcRestoreIn" accept=".json,application/json" hidden></div><div class="pcNote" id="pcNote"></div></div>
 <div class="barn" id="barn">
 <div class="barnHead"><b>🐐 THE BARN</b><span>every device lives down here — scroll back up (or leave the barn) for the roll</span></div>
 <div class="hint">
@@ -689,7 +713,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
   <div class="panel tx-hammered" id="pChords"><h2>Chord Sequence</h2>
     <textarea id="chText" spellcheck="false" placeholder="Am9 | Fmaj7#11 | C6/9/E | G13sus4 G7b9"></textarea>
     <div class="bar"><span>Each chord</span><select id="chUnit"></select><span class="legend">— or use bar lines: chords inside one <b>| bar |</b> share it</span></div>
-    <div class="bar"><span>Start bar</span><input type="number" id="chStart" min="1" style="width:56px"><button id="chFromPos" title="Use the playhead's bar">⌖ playhead</button><select id="chOct"></select></div>
+    <div class="bar"><span>Start bar</span><input type="number" id="chStart" min="1" style="width:56px" title="Where Write puts the progression — it follows the playhead (click the ruler), or type a bar"><button id="chFromPos" title="Use the playhead's bar">⌖ playhead</button><select id="chOct"></select></div>
     <div class="bar"><span>Voicing</span><select id="chVoice"></select><select id="chInv" title="Inversion (ignored by Smooth, which picks inversions itself)"></select></div>
     <div class="bar"><label class="f"><input type="checkbox" id="chBass"> Root in bass</label><label class="f"><input type="checkbox" id="chReplace"> Replace notes in that range</label></div>
     <div class="bar"><button id="chWrite" class="on">⤵ Write to sequencer</button><button id="chPrev">▶ Preview</button><button id="chClearRest" class="danger" hidden title="Remove the notes that were already in the song after your progression">✂ Clear the rest</button><span class="seg"><button data-hear="arp">Arp</button><button data-hear="block">Block</button></span><span id="chInfo" class="legend"></span></div>
@@ -1003,8 +1027,8 @@ function restore(str){const o=JSON.parse(str);const bars0=S.bars;Object.assign(S
 function undo(){if(!undoStack.length)return;redoStack.push(snap());restore(undoStack.pop())}
 function redo(){if(!redoStack.length)return;undoStack.push(snap());restore(redoStack.pop())}
 let saveT=0;
-function saveNow(){clearTimeout(saveT);try{localStorage.setItem('arploom.v2',JSON.stringify(S))}catch(e){}}
-function saveSoon(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('arploom.v2',JSON.stringify(S))}catch(e){}},400)}
+function saveNow(){clearTimeout(saveT);try{localStorage.setItem('arploom.v2',JSON.stringify(S))}catch(e){}pieceAutoSave()}
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('arploom.v2',JSON.stringify(S))}catch(e){}pieceAutoSave()},400)}
 function loadState(obj){
   const d=defaultState();
   S=Object.assign(d,obj||{});
@@ -1413,9 +1437,11 @@ function clickAt(t,accent){
   o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.08);
 }
 function seek(t){
-  t=clamp(t,0,totalTicks()-1);P.pos=t;P.startPos=t;
+  t=clamp(t,0,totalTicks()-1);P.pos=t;P.startPos=t;chFollowPlayhead(t);
   if(P.playing){if(P.rec)recCloseAll();killVoices();P.anchorTime=AC.currentTime+.04;P.anchorTick=t;P.schedTick=t}
 }
+// the chord panel's start bar follows the playhead, so a new progression goes where you put it
+function chFollowPlayhead(t){if(typeof S==='undefined'||!S||!S.chordSeq)return;const b=Math.floor(t/1920)+1;if(S.chordSeq.start===b)return;S.chordSeq.start=b;const f=$('chStart');if(f&&document.activeElement!==f)f.value=b;saveSoon()}
 function reanchor(){if(!P.playing)return;const c=curAbs();P.anchorTime=AC.currentTime;P.anchorTick=c;P.schedTick=Math.max(P.schedTick,c)}
 function sched(){
   if(!P.playing)return;
@@ -2738,8 +2764,12 @@ $('bMidi').onclick=()=>{
 /* ============================ project save/load ============================ */
 $('bSave').onclick=()=>{download(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),fname()+'.arploom.json');status('Project saved.')};
 $('bLoad').onclick=()=>$('fileIn').click();
-$('fileIn').onchange=async()=>{const f=$('fileIn').files[0];if(!f)return;try{const o=JSON.parse(await f.text());pushUndo();loadState(o);sel.clear();selSeg=null;layout();refreshAll();changed(true);status('Loaded '+f.name)}catch(e){status('Could not load: '+e.message)}$('fileIn').value=''};
-$('bNew').onclick=()=>{if(!confirm('Replace everything with the demo project?'))return;if(P.playing)stop();loadState(null);undoStack=[];redoStack=[];sel.clear();selSeg=null;layout();refreshAll();changed(true)};
+$('fileIn').onchange=async()=>{const f=$('fileIn').files[0];$('fileIn').value='';if(!f)return;   // a project file opens as a new piece
+  try{const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.notes))throw new Error('not a project file');await pieceFlush();
+    o.pieceId=newPieceId();o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');pieceSwitchTo(o);await pieceWrite();status(`Opened ${f.name} as a new piece.`)}
+  catch(e){status('Could not load: '+e.message)}};
+$('bNew').onclick=async()=>{await pieceFlush();pieceSwitchTo(null);S.pieceId=newPieceId();S.pieceCreated=Date.now();S.title='Demo';await pieceWrite();pieceUI();
+  status('Opened the demo as a new piece — your last piece is saved.')};
 
 /* ============================ chord sequence (type chords -> sequencer) ============================ */
 const LET_PC=[0,2,4,5,7,9,11],MAJ_SEMI={1:0,2:2,3:4,4:5,5:7,6:9,7:11,9:14,11:17,13:21};
@@ -4264,6 +4294,113 @@ function chPasteTok(){
   out=out.replace(/[ \t]{2,}/g,' ').trim();
   chSel=k;chText(out);status(`Pasted ${chClip}${bars?' as its own bar':''}.`);
 }
+
+
+/* ============================ your pieces: many songs, kept in this browser's database ============================ */
+var pieceT=0,pieceDB=null;
+function pieceStore(mode,fn){
+  pieceDB=pieceDB||new Promise((res,rej)=>{if(!window.indexedDB){rej('no database in this browser');return}
+    const r=indexedDB.open('superGoatPieces',1);r.onupgradeneeded=()=>r.result.createObjectStore('pieces',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+  return pieceDB.then(db=>new Promise((res,rej)=>{const t=db.transaction('pieces',mode),rq=fn(t.objectStore('pieces'));let out;if(rq)rq.onsuccess=()=>{out=rq.result};
+    t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}));
+}
+const PIECES={all:()=>pieceStore('readonly',st=>st.getAll()),get:id=>pieceStore('readonly',st=>st.get(id)),put:x=>pieceStore('readwrite',st=>st.put(x)),del:id=>pieceStore('readwrite',st=>st.delete(id))};
+const newPieceId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pieceAgo=t=>{const s=(Date.now()-t)/1000;return s<50?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':s<86400*14?Math.round(s/86400)+' days ago':new Date(t).toLocaleDateString()};
+function pieceWrite(){
+  if(!S||!S.pieceId)return Promise.resolve();
+  return PIECES.put({id:S.pieceId,title:S.title||'Untitled piece',created:S.pieceCreated||Date.now(),updated:Date.now(),bars:S.bars,bpm:S.bpm,notes:S.notes.length,state:JSON.stringify(S)})
+    .catch(e=>status('Couldn’t save the piece: '+e));
+}
+function pieceAutoSave(){if(typeof S==='undefined'||!S||!S.pieceId)return;clearTimeout(pieceT);pieceT=setTimeout(pieceWrite,900)}
+// put the work on screen into the library (a new entry if it has none) before switching away from it
+async function pieceFlush(){
+  if(!S.pieceId){if(!S.notes.length&&!(S.blocks||[]).length)return;S.pieceId=newPieceId();S.pieceCreated=Date.now();S.title=S.title||'Untitled piece'}
+  clearTimeout(pieceT);await pieceWrite();
+}
+function pieceSwitchTo(o){
+  if(P.playing)stop();loadState(o);undoStack=[];redoStack=[];sel.clear();selArp.clear();selSeg=null;selBlk=null;secRange=null;
+  $('bars').value=S.bars;$('bpm').value=S.bpm;layout();refreshAll();changed(true);saveNow();pieceUI();if(!$('pieceCard').hidden)pieceCardFill();
+}
+async function pieceSaveNow(){
+  if(!S.pieceId){S.pieceId=newPieceId();S.pieceCreated=Date.now()}
+  const t=$('pcTitle').value.trim();if(!$('pieceCard').hidden&&t)S.title=t;if(!S.title)S.title='Untitled piece';
+  clearTimeout(pieceT);await pieceWrite();saveNow();pieceUI();if(!$('pieceCard').hidden)pieceCardFill();
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}   // ask the browser to keep it
+  status(`Saved “${S.title}”.`);
+}
+async function pieceOpen(id){
+  await pieceFlush();const p=await PIECES.get(id);if(!p){status('That piece isn’t there any more.');return}
+  const o=JSON.parse(p.state);o.pieceId=p.id;o.title=p.title;o.pieceCreated=p.created;pieceSwitchTo(o);status(`Opened “${S.title}”.`);
+}
+async function pieceNew(){
+  await pieceFlush();const keep={synth:clone(S.synth),arp:clone(S.arp),bpm:S.bpm};   // your current sound carries over
+  const o=defaultState();o.notes=[];o.segs=[];o.blocks=[];o.chordSeq.text='';o.synth=keep.synth;o.arp=keep.arp;o.bpm=keep.bpm;
+  for(const k of CLONE_LANES)o[k]=[];
+  const n=(await PIECES.all().catch(()=>[])).filter(x=>/^Untitled piece/.test(x.title||'')).length;
+  o.pieceId=newPieceId();o.pieceCreated=Date.now();o.title='Untitled piece'+(n?' '+(n+1):'');
+  pieceSwitchTo(o);await pieceWrite();pieceCardFill();status('New piece — it saves as you go.');$('pcTitle').focus();$('pcTitle').select();
+}
+async function pieceCopy(id){
+  await pieceFlush();const p=await PIECES.get(id);if(!p)return;
+  const n=Object.assign({},p,{id:newPieceId(),title:(p.title||'Untitled piece')+' (copy)',created:Date.now(),updated:Date.now()});
+  const st=JSON.parse(p.state);st.pieceId=n.id;st.title=n.title;st.pieceCreated=n.created;n.state=JSON.stringify(st);
+  await PIECES.put(n);pieceList();status(`Made “${n.title}”.`);
+}
+async function pieceDelete(id){
+  const p=await PIECES.get(id);await PIECES.del(id);
+  if(id===S.pieceId){S.pieceId=null;saveNow()}   // what's on screen stays, it's just not in the list any more
+  pieceUI();pieceList();status(`Deleted “${p&&p.title||'piece'}”.`);
+}
+function pieceUI(){
+  if(typeof S==='undefined'||!S)return;const nm=$('pieceName'),t=S.title||'Untitled piece',h=S.pieceId?t:t+' <span class="unsaved">(not saved)</span>';
+  if(nm.dataset.h!==h){nm.dataset.h=h;nm.innerHTML='';nm.append(t);if(!S.pieceId){const u=document.createElement('span');u.className='unsaved';u.textContent=' (not saved)';nm.append(u)}}
+}
+async function pieceList(){
+  const box=$('pcList');let all;
+  try{all=await PIECES.all()}catch(e){box.innerHTML='';box.append(el('div','pcEmpty','This browser won’t let the app keep a piece library ('+e+'). Use Save project… in Export & Project instead.'));return}
+  all.sort((a,b)=>b.updated-a.updated);box.innerHTML='';
+  if(!all.length){box.append(el('div','pcEmpty','No saved pieces yet — press 💾 Save to keep this one.'));return}
+  for(const p of all){
+    const cur=p.id===S.pieceId,row=el('div','pcItem'+(cur?' cur':'')),txt=el('div','pcTxt');
+    txt.append(el('b',null,p.title||'Untitled piece'),el('small',null,`${p.bars} bars · ${p.bpm} BPM · ${p.notes} notes · edited ${pieceAgo(p.updated)}${cur?' · open now':''}`));row.append(txt);
+    if(!cur){const o=el('button','on','Open');o.onclick=()=>pieceOpen(p.id);row.append(o)}
+    const c=el('button',null,'Copy');c.title='Make a copy of it';c.onclick=()=>pieceCopy(p.id);row.append(c);
+    const d=el('button','danger','Delete');d.onclick=()=>{if(d.dataset.sure){pieceDelete(p.id)}else{d.dataset.sure=1;d.textContent='Sure?';setTimeout(()=>{d.dataset.sure='';d.textContent='Delete'},3000)}};row.append(d);
+    box.append(row);
+  }
+}
+function pieceCardFill(){
+  $('pcTitle').value=S.title||'';
+  $('pcInfo').textContent=`${S.bars} bars · ${S.bpm} BPM · ${S.notes.length} notes${S.pieceId?' · saves as you go':' · not saved yet'}`;
+  $('pcNote').textContent=`Pieces are kept ${PLUGIN?'inside the plugin on this computer':IOS?'in this browser on this iPad/iPhone':'in this browser on this computer'} (each device keeps its own). “Back up all pieces” saves them to one file you can restore anywhere.`;
+  pieceList();
+}
+(function(){
+  const card=$('pieceCard');
+  const open=()=>{card.hidden=false;pieceCardFill()},close=()=>{card.hidden=true};
+  $('pieceBtn').onclick=()=>card.hidden?open():close();$('pcClose').onclick=close;
+  $('pcSave').onclick=pieceSaveNow;$('pcNew').onclick=pieceNew;
+  $('pcTitle').addEventListener('input',()=>{S.title=$('pcTitle').value.trim();pieceUI();saveSoon()});
+  $('pcTitle').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pieceSaveNow()}});
+  $('pcBackup').onclick=async()=>{await pieceFlush();const all=await PIECES.all();
+    download(new Blob([JSON.stringify({app:'super-goat-arpeggiator',kind:'pieces',version:1,saved:Date.now(),pieces:all})],{type:'application/json'}),'super-goat-pieces-'+new Date().toISOString().slice(0,10)+'.json');
+    status(`Backed up ${all.length} piece${all.length===1?'':'s'}.`)};
+  $('pcRestore').onclick=()=>$('pcRestoreIn').click();
+  $('pcRestoreIn').onchange=async()=>{const f=$('pcRestoreIn').files[0];$('pcRestoreIn').value='';if(!f)return;
+    let o;try{o=JSON.parse(await f.text())}catch(e){status('That file isn’t a backup.');return}
+    let n=0;
+    if(o&&o.kind==='pieces'&&Array.isArray(o.pieces)){const have=new Map((await PIECES.all()).map(x=>[x.id,x]));
+      for(const x of o.pieces){if(!x||!x.id||!x.state)continue;const h=have.get(x.id);if(h&&h.updated>=x.updated)continue;await PIECES.put(x);n++}}
+    else if(o&&Array.isArray(o.notes)){const id=newPieceId();o.pieceId=id;o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');
+      await PIECES.put({id,title:o.title,created:Date.now(),updated:Date.now(),bars:o.bars||16,bpm:o.bpm||120,notes:o.notes.length,state:JSON.stringify(o)});n=1}
+    else{status('That file isn’t a backup.');return}
+    pieceList();status(`Restored ${n} piece${n===1?'':'s'}${n?'':' (they were already here)'}.`)};
+  addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopImmediatePropagation();pieceSaveNow();return}
+    if(e.key==='Escape'&&!card.hidden){close();e.preventDefault();e.stopImmediatePropagation()}},true);
+  setInterval(pieceUI,800);setTimeout(pieceUI,0);
+})();
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
 const JB=window.__JUCE__&&window.__JUCE__.backend;
