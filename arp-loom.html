@@ -2167,7 +2167,7 @@ function secCopy(){
   if(!secRange)return false;const{a,b}=secRange;
   const notes=S.notes.filter(n=>n.s>=a&&n.s<b).map(n=>({r:n.s-a,l:Math.min(n.l,b-n.s),p:n.p,v:n.v}));
   const segs=S.segs.filter(g=>g.s<b&&g.s+g.l>a).map(g=>{const s0=Math.max(g.s,a),e0=Math.min(g.s+g.l,b);return{r:s0-a,l:e0-s0,pat:g.pat,rate:g.rate||0,oct:g.oct||0}});
-  CLIP={type:'section',span:b-a,notes,segs};status(`Copied section: ${notes.length} notes, ${segs.length} timeline segment${segs.length===1?'':'s'}.`);return true;
+  CLIP={type:'section',span:b-a,notes,segs,lanes:CLONE_LANES.map(k=>(S[k]||[]).slice(Math.round(a/STEP),Math.round(b/STEP)))};status(`Copied section: ${notes.length} notes, ${segs.length} timeline segment${segs.length===1?'':'s'}.`);return true;
 }
 function secClear(a,b){S.notes=S.notes.filter(n=>n.s<a||n.s>=b);const tmp={id:-1,s:a,l:b-a};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp)}
 function secPaste(at,noUndo){
@@ -2176,6 +2176,7 @@ function secPaste(at,noUndo){
   const total=totalTicks();rangeClear(at,at+span);sel.clear();
   for(const it of CLIP.notes){const s0=at+it.r;if(s0>=total)continue;const n={id:nextId++,p:it.p,s:s0,l:Math.min(it.l,total-s0),v:it.v};S.notes.push(n);sel.add(n)}
   for(const it of CLIP.segs){const s0=at+it.r;if(s0>=total)continue;const g={id:nextId++,s:s0,l:Math.min(it.l,total-s0),pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
+  if(CLIP.lanes){const base=Math.round(at/STEP);CLONE_LANES.forEach((k,j)=>{const arr=S[k],src=CLIP.lanes[j];if(Array.isArray(arr)&&src)for(let q=0;q<src.length&&base+q<arr.length;q++)arr[base+q]=src[q]})}   // the drawn lanes come along
   if(CLIP.blk){const nb={id:nextId++,s:at,l:Math.min(span,total-at),loop:Math.min(CLIP.blk.loop,span),name:CLIP.blk.name,h:CLIP.blk.h};blkPlace(nb);selBlk=nb.id;focusArea='blocks';secRange=null;changed(true);status(`Pasted section ${nb.name} at ${barTxt(at,nb.l)}.`);return}
   secRange={a:at,b:Math.min(total,at+span)};changed(true);status(`Pasted section at bar ${+(at/1920+1).toFixed(2)}.`);
 }
@@ -3952,7 +3953,7 @@ function quantise(list,opts={}){
 /* ---------- clone bars: copy bars A–B to bar D (× N copies), exactly on the bar lines ---------- */
 var CLONEP=null;   // the preview while the box is open: {A,B,D,span,times}
 function cloneRanges(){if(!CLONEP)return[];const c=CLONEP,out=[{a:c.A,b:c.B,src:true}];for(let i=0;i<c.times;i++)out.push({a:c.D+i*c.span,b:c.D+(i+1)*c.span,n:i+1});return out}
-const CLONE_LANES=['prof','fprof','tprof','pprof','aprof','oprof','rprof'];
+const CLONE_LANES=['prof','fprof','tprof','pprof','aprof','oprof','rprof'],LANE_DEF={prof:1,fprof:.5,tprof:.5,pprof:.5,aprof:.5,oprof:0,rprof:0};   // the drawn lanes and their flat values
 function cloneBars(a,b,d,times,o={}){
   a=Math.round(a);b=Math.round(b);d=Math.round(d);times=clamp(Math.round(times)||1,1,64);
   if(b<a)[a,b]=[b,a];
@@ -4011,8 +4012,8 @@ function cloneBars(a,b,d,times,o={}){
     card.hidden=false;$('cloneBtn').classList.add('on');upd();
   };
   const close=()=>{card.hidden=true;CLONEP=null;$('cloneBtn').classList.remove('on')};
-  const CLONE_OPT={segs:true,lanes:false};try{Object.assign(CLONE_OPT,JSON.parse(localStorage.getItem('arploom.clone'))||{})}catch(e){}
-  const saveOpt=()=>{try{localStorage.setItem('arploom.clone',JSON.stringify(CLONE_OPT))}catch(e){}};
+  const CLONE_OPT={segs:true,lanes:true};try{Object.assign(CLONE_OPT,JSON.parse(localStorage.getItem('arploom.clone2'))||{})}catch(e){}
+  const saveOpt=()=>{try{localStorage.setItem('arploom.clone2',JSON.stringify(CLONE_OPT))}catch(e){}};
   $('cloneBtn').onclick=()=>card.hidden?open():close();
   $('ccClose').onclick=close;
   for(const inp of [F,T,AT,N]){
@@ -4058,14 +4059,18 @@ function blkPlace(b){
 // the music in a range: notes that start there (cut at its end) and the arp timeline
 function rangeSnap(A,B){return{span:B-A,
   notes:S.notes.filter(n=>n.s>=A&&n.s<B).map(n=>({r:n.s-A,l:Math.min(n.l,B-n.s),p:n.p,v:n.v})),
-  segs:S.segs.filter(g=>g.s<B&&g.s+g.l>A).map(g=>{const s0=Math.max(g.s,A),e0=Math.min(g.s+g.l,B);return{r:s0-A,l:e0-s0,pat:g.pat,rate:g.rate||0,oct:g.oct||0}})}}
+  segs:S.segs.filter(g=>g.s<B&&g.s+g.l>A).map(g=>{const s0=Math.max(g.s,A),e0=Math.min(g.s+g.l,B);return{r:s0-A,l:e0-s0,pat:g.pat,rate:g.rate||0,oct:g.oct||0}}),
+  lanes:CLONE_LANES.map(k=>(S[k]||[]).slice(Math.round(A/STEP),Math.round(B/STEP)))}}   // the drawn lanes under it travel with it
 function rangeClear(A,B){
   S.notes=S.notes.filter(n=>n.s<A||n.s>=B);for(const n of S.notes)if(n.s<A&&n.s+n.l>A)n.l=A-n.s;   // nothing rings into the cleared bars
   const tmp={id:-1,s:A,l:B-A};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp);
+  const a=Math.round(A/STEP),b=Math.round(B/STEP);for(const k of CLONE_LANES){const arr=S[k];if(Array.isArray(arr))for(let i=a;i<b&&i<arr.length;i++)arr[i]=LANE_DEF[k]}   // and its lanes go flat
 }
 function rangePut(sn,at,from=at,upto=at+sn.span){
   for(const it of sn.notes){const s0=at+it.r;if(s0<from||s0>=upto)continue;S.notes.push({id:nextId++,p:it.p,s:s0,l:Math.min(it.l,upto-s0),v:it.v})}
   for(const it of sn.segs){const a=Math.max(at+it.r,from),e=Math.min(at+it.r+it.l,upto);if(e<=a)continue;const g={id:nextId++,s:a,l:e-a,pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
+  if(sn.lanes){const f=Math.round(from/STEP),u=Math.round(upto/STEP),base=Math.round(at/STEP);
+    CLONE_LANES.forEach((k,j)=>{const arr=S[k],src=sn.lanes[j];if(Array.isArray(arr)&&src)for(let q=0;q<src.length;q++){const i=base+q;if(i>=f&&i<u&&i<arr.length)arr[i]=src[q]}})}
 }
 function growTo(end){if(end>totalTicks()){S.bars=clamp(Math.ceil(end/1920),1,512);$('bars').value=S.bars;fixProfile();layout()}}
 const barTxt=(s,l)=>l>1920?`bars ${s/1920+1}–${(s+l)/1920}`:`bar ${s/1920+1}`;
@@ -4240,7 +4245,7 @@ function blkMenuClose(){$('blkMenu').hidden=true}
 /* ---------- copy / cut / paste: section blocks and chord boxes ---------- */
 function blkCopy(bk){
   const sn=rangeSnap(bk.s,bk.s+bk.l);
-  CLIP={type:'section',span:bk.l,notes:sn.notes,segs:sn.segs,blk:{name:bk.name,h:bk.h,loop:bk.loop||bk.l}};
+  CLIP={type:'section',span:bk.l,notes:sn.notes,segs:sn.segs,lanes:sn.lanes,blk:{name:bk.name,h:bk.h,loop:bk.loop||bk.l}};
   status(`Copied section ${bk.name} — click an empty spot on SECTIONS (or leave it: it goes after the music), then Ctrl+V.`);return true;
 }
 let chClip=null;
