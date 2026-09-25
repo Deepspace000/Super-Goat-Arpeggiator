@@ -43,7 +43,7 @@ label.f{display:inline-flex;align-items:center;gap:5px;color:var(--dim)}
 .sep{width:1px;height:22px;background:var(--line)}
 #pos{font:600 14px ui-monospace,Consolas,monospace;color:var(--acc);min-width:70px;text-align:center}
 #scope{width:140px;height:30px;border:1px solid var(--line);border-radius:5px;background:#07090c;margin-left:auto}
-.roll{display:grid;grid-template-columns:var(--kW,64px) minmax(0,1fr);grid-template-rows:50px 26px var(--gH,420px) var(--vH,64px) var(--pH,72px) var(--fH,72px) var(--tH,72px) var(--nH,72px) var(--aH,72px) var(--oH,72px) var(--rH,72px);margin:8px 12px 4px;position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0c10}
+.roll{display:grid;grid-template-columns:var(--kW,64px) minmax(0,1fr);grid-template-rows:50px 26px 26px var(--gH,420px) var(--vH,64px) var(--pH,72px) var(--fH,72px) var(--tH,72px) var(--nH,72px) var(--aH,72px) var(--oH,72px) var(--rH,72px);margin:8px 12px 4px;position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0c10}
 .corner,.lab{overflow:hidden;background:#11141c;border-right:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:.08em;display:flex;flex-direction:column;justify-content:center;padding:0 6px;gap:3px}
 .lab{border-top:1px solid var(--line)}
 .lab b{color:var(--txt);font-weight:600}
@@ -57,7 +57,7 @@ label.f{display:inline-flex;align-items:center;gap:5px;color:var(--dim)}
 .rgrip{position:absolute;left:0;right:0;height:9px;margin-top:-5px;cursor:ns-resize;z-index:6;touch-action:none}
 .rgrip::after{content:'';position:absolute;left:50%;top:2px;width:70px;height:5px;margin-left:-35px;border-radius:3px;background:rgba(132,144,168,.55);transition:all .15s}
 .rgrip:hover{background:rgba(110,231,255,.08)}
-.kgrip{position:absolute;top:76px;bottom:0;width:9px;margin-left:-5px;cursor:ew-resize;z-index:6;touch-action:none}
+.kgrip{position:absolute;top:102px;bottom:0;width:9px;margin-left:-5px;cursor:ew-resize;z-index:6;touch-action:none}
 .kgrip::after{content:'';position:absolute;top:50%;left:2px;height:60px;width:5px;margin-top:-30px;border-radius:3px;background:rgba(132,144,168,.55);transition:all .15s}
 .kgrip:hover::after,.kgrip.on::after{background:var(--acc);height:120px;margin-top:-60px}
 .rgrip:hover::after,.rgrip.on::after{background:var(--acc);width:90px;margin-left:-45px}
@@ -225,6 +225,33 @@ body.sheetMode .roll{display:none}
 #sheetSpacer{position:relative}
 #sheetCv{position:sticky;top:0;left:0;display:block;touch-action:none}
 .sheetView .rsb.v{bottom:0}
+
+
+/* ---------- clone bars: a box that copies bars X-Y to bar Z ---------- */
+#cloneBtn{flex:none;padding:5px 12px}
+html.touch #cloneBtn{padding:6px 12px;font-size:14px}
+.cloneCard{position:fixed;left:50%;transform:translateX(-50%);bottom:78px;z-index:38;width:min(410px,calc(100vw - 24px));box-sizing:border-box;padding:12px 14px 14px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(26,34,44,.97),rgba(14,18,26,.97));border:1px solid rgba(120,255,170,.5);box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 26px rgba(120,255,170,.13);color:var(--txt)}
+.cloneCard[hidden]{display:none}
+.ccHead{display:flex;align-items:center;margin-bottom:6px}.ccHead b{letter-spacing:.08em;color:#b8ffd2}.ccHead button{margin-left:auto;padding:2px 10px}
+.ccRow{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}.ccRow>span{color:var(--dim);min-width:92px}
+.ccNum{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.ccNum button{border:0;border-radius:0;padding:4px 12px;font-size:17px;line-height:24px;min-width:38px}
+.ccNum input{width:60px;text-align:center;font-size:16px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;padding:4px 2px;-moz-appearance:textfield;appearance:textfield}
+.ccNum input::-webkit-outer-spin-button,.ccNum input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ccInfo{font-size:12.5px;color:#b8ffd2;margin:10px 0 10px;min-height:17px;line-height:1.35}.ccInfo.bad{color:#ff9b9b}
+#ccGo{width:100%;padding:9px;font-size:15px;font-weight:700}
+
+
+/* ---------- section block menu (right-click / double-tap a block) ---------- */
+.blkMenu{position:fixed;z-index:45;width:250px;box-sizing:border-box;padding:10px 10px 8px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(30,36,50,.98),rgba(16,19,27,.98));border:1px solid rgba(160,200,255,.4);box-shadow:0 16px 44px rgba(0,0,0,.6);color:var(--txt)}
+.blkMenu[hidden]{display:none}
+.bmHead{font-weight:700;font-size:12px;letter-spacing:.04em;margin:0 2px 8px;color:#cfe3ff}
+.bmRow{display:flex;align-items:center;gap:6px;margin:6px 0}.bmRow>span{flex:1;color:var(--dim);font-size:12.5px}
+.bmRow input{width:56px;font-size:16px;text-align:center;padding:3px 2px}
+.bmRow button{min-width:58px}
+.blkMenu>button{display:block;width:100%;text-align:left;margin:4px 0;padding:6px 10px;font-size:13.5px}
 
 /* ---------- goat banner ---------- */
 .goatBanner{--h:285;position:relative;display:flex;align-items:center;gap:18px;margin:10px 12px 0;padding:6px 20px 6px 10px;border-radius:14px;overflow:hidden;isolation:isolate;
@@ -534,7 +561,9 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 <div class="roll" id="roll">
   <div class="corner"><b>TIMELINE</b>modes</div>
   <div class="cw" id="rulerW"><canvas id="ruler"></canvas></div>
-  <div class="lab" title="Chords in the roll — click to select · Shift-click = everything between · Ctrl-click = add/remove one · Shift-drag = box · drag to move · drag the right edge to resize"><b>CHORDS</b></div>
+  <div class="lab lab-fixed" title="Sections — writing a progression makes one. Drag to move · drag the right edge to repeat or shorten · Alt-drag copies · tap one for Duplicate / Delete / Move to bar · drag on an empty spot to make one"><b>SECTIONS</b></div>
+  <div class="cw lanew" id="blkW"><canvas id="blkCv"></canvas></div>
+  <div class="lab lab-fixed" title="Chords in the roll — click to select · Shift-click = everything between · Ctrl-click = add/remove one · Shift-drag = box · drag to move · drag the right edge to resize"><b>CHORDS</b></div>
   <div class="cw lanew" id="chordW"><canvas id="chordCv"></canvas></div>
   <div class="cw" id="keysW" style="border-right:1px solid var(--line)"><canvas id="keys"></canvas></div>
   <div class="gridCell" id="gridCell"><div id="scroller"><div id="spacer"><canvas id="grid"></canvas></div></div><div class="rsb v" id="vBar" title="Drag to scroll up and down"><i></i></div><div class="rsb h" id="hBar" title="Drag to scroll through the song"><i></i></div></div>
@@ -604,7 +633,9 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 </div>
 <div class="sheetBox" id="sheetBox" hidden><div class="sheetBar"><b>📜 SHEET</b><label class="f">Bars per system <select id="shBps"><option value="0">Auto</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option></select></label><label class="f">Row height <input type="range" id="shRh" min="2" max="14" step="1" style="width:80px"></label><span class="shHint">Draw and edit notes just like the roll · tap the strip above a system to move the playhead</span></div><div class="sheetView"><div id="sheetWrap"><div id="sheetSpacer"><canvas id="sheetCv"></canvas></div></div><div class="rsb v" id="shVBar" title="Drag to scroll through the systems"><i></i></div></div></div>
 <div id="secBar" class="secBar"></div>
-<div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button><button data-k="q" title="Quantise (grid set in the barn’s Quantise panel)">⌗<b> Quantise</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
+<div class="barnBar"><button id="barnBtn" title="All the devices: arpeggiator, chords, sounds, oscillators, filter, envelopes, effects, MIDI, export (Tab)">🐐 Look inside the barn</button><span class="bbInfo" id="bbInfo"></span><button id="cloneBtn" title="Copy a range of bars to another bar, lined up exactly">⧉ Clone bars</button><span class="touchEdit" id="touchEdit"><button data-k="x" title="Cut">✂<b> Cut</b></button><button data-k="c" title="Copy">⧉<b> Copy</b></button><button data-k="v" title="Paste (at the next empty bar)">📋<b> Paste</b></button><button data-k="d" title="Duplicate">⧺<b> Duplicate</b></button><button data-k="Delete" title="Delete the selection" class="danger">🗑<b> Delete</b></button><button data-k="q" title="Quantise (grid set in the barn’s Quantise panel)">⌗<b> Quantise</b></button></span><span class="takeBox" id="takeBox"><span class="takeCard takeHint"><span class="tcIcon">🎙</span><span class="tcTxt"><b>TAKES</b><small id="takeHintS">Press Record in Reason — your take appears here</small></span></span><span class="takeCard takeRec"><span class="tcIcon">●</span><span class="tcTxt"><b>RECORDING TAKE <span id="takeTime">0:00</span></b><small>press Stop in Reason to finish it</small></span></span><span class="takeCard takeChip" id="takeChip"><span class="tcIcon">⇲</span><span class="tcTxt"><b>DRAG TAKE INTO REASON</b><small id="takeName"></small></span></span><span class="takeSide"><button id="takeFolder" title="Open the folder with all your takes">📂 Takes folder</button><select id="takeMode" title="When the plugin records a take"><option value="1">Take when Reason records</option><option value="2">Take whenever Reason plays</option><option value="0">Takes off</option></select></span></span></div>
+<div class="cloneCard" id="cloneCard" hidden><div class="ccHead"><b>⧉ CLONE BARS</b><button id="ccClose" title="Close (Esc)">✕</button></div><div class="ccRow"><span>Bars</span><span class="ccNum"><button data-step="-1" data-for="ccFrom" title="One less">−</button><input id="ccFrom" type="number" inputmode="numeric" min="1" max="512" step="1" title="First bar to copy"><button data-step="1" data-for="ccFrom" title="One more">+</button></span><span style="min-width:0">to</span><span class="ccNum"><button data-step="-1" data-for="ccTo" title="One less">−</button><input id="ccTo" type="number" inputmode="numeric" min="1" max="512" step="1" title="Last bar to copy"><button data-step="1" data-for="ccTo" title="One more">+</button></span></div><div class="ccRow"><span>Paste at bar</span><span class="ccNum"><button data-step="-1" data-for="ccAt" title="One less">−</button><input id="ccAt" type="number" inputmode="numeric" min="1" max="512" step="1" title="Where the copy starts"><button data-step="1" data-for="ccAt" title="One more">+</button></span></div><div class="ccRow"><span>Copies</span><span class="ccNum"><button data-step="-1" data-for="ccTimes" title="One less">−</button><input id="ccTimes" type="number" inputmode="numeric" min="1" max="512" step="1" title="How many copies, one after another"><button data-step="1" data-for="ccTimes" title="One more">+</button></span></div><div class="ccRow"><label class="f" title="Copy the arp pattern changes in those bars too"><input type="checkbox" id="ccSegs"> Arp timeline</label><label class="f" title="Copy the volume, filter, tuning, pan, articulation, glide and rate lanes too"><input type="checkbox" id="ccLanes"> Drawn lanes</label></div><div class="ccInfo" id="ccInfo"></div><button id="ccGo" class="on">⧉ Clone</button></div>
+<div class="blkMenu" id="blkMenu" hidden><div class="bmHead" id="bmHead"></div><div class="bmRow"><span>Move to bar</span><input id="bmMove" type="number" inputmode="numeric" min="1" max="512"><button id="bmMoveGo">Move</button></div><div class="bmRow"><span>Length (bars)</span><input id="bmLen" type="number" inputmode="numeric" min="1" max="512" title="Longer = the section repeats; shorter = it’s cut"><button id="bmLenGo">Set</button></div><div class="bmRow"><span>Copy to bar</span><input id="bmCopyTo" type="number" inputmode="numeric" min="1" max="512"><button id="bmCopyGo">Copy</button></div><button id="bmDup">⧺ Duplicate (right after it)</button><button id="bmRename">✎ Rename…</button><button id="bmDel" class="danger">🗑 Delete section</button></div>
 <div class="barn" id="barn">
 <div class="barnHead"><b>🐐 THE BARN</b><span>every device lives down here — scroll back up (or leave the barn) for the roll</span></div>
 <div class="hint">
@@ -729,6 +760,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
     <div class="bar"><button id="bWav">⤓ Export WAV (24-bit / 48 kHz)</button><button id="bMidi">⤓ Export MIDI</button></div>
     <h3>Project</h3>
     <div class="bar"><button id="bSave">Save project…</button><button id="bLoad">Load project…</button><button id="bNew" class="danger">New / demo</button><input type="file" id="fileIn" accept=".json,application/json" hidden></div>
+    <div class="bar"><button id="bImportMidi" title="Bring the notes of a MIDI file (.mid) into the sequencer">⤒ Import MIDI…</button><label class="f" title="Off = the file’s notes go after your last bar"><input type="checkbox" id="midiReplace" checked> Replace my notes</label><label class="f"><input type="checkbox" id="midiTempo" checked> Use its tempo</label><input type="file" id="midiFileIn" accept=".mid,.midi,audio/midi,audio/x-midi" hidden></div>
     <div id="status"></div>
   </div>
 </div>
@@ -913,7 +945,7 @@ const presetSynth=name=>deepMerge(clone(BASE_SYNTH),clone(PRESETS[name]||{}));
 let S, nextId=1;
 function defaultState(){
   const s={v:2,bpm:118,bars:8,loop:true,seed:1234,
-    notes:[],segs:[],prof:[],
+    notes:[],segs:[],blocks:[],prof:[],
     arp:{pat:'up',rate:120,gate:.85,oct:2,swing:0,vel:100,human:.1,retrig:true},
     customPats:[
       {id:'cp_alberti',name:'Alberti (1-3-2-3)',steps:[0,2,1,2].map(i=>({i,o:0,a:false}))},
@@ -965,9 +997,9 @@ const profAt=t=>{const v=S.prof[Math.floor(t/STEP)];return v==null?1:v};
 
 /* ============================ undo / persistence ============================ */
 let undoStack=[],redoStack=[];
-const snap=()=>JSON.stringify({notes:S.notes,segs:S.segs,prof:S.prof,fprof:S.fprof,tprof:S.tprof,pprof:S.pprof,aprof:S.aprof,oprof:S.oprof,rprof:S.rprof,customPats:S.customPats});
+const snap=()=>JSON.stringify({notes:S.notes,segs:S.segs,blocks:S.blocks||[],bars:S.bars,prof:S.prof,fprof:S.fprof,tprof:S.tprof,pprof:S.pprof,aprof:S.aprof,oprof:S.oprof,rprof:S.rprof,customPats:S.customPats});
 function pushUndo(){undoStack.push(snap());if(undoStack.length>150)undoStack.shift();redoStack=[]}
-function restore(str){const o=JSON.parse(str);Object.assign(S,o);sel.clear();fixProfile();changed(true)}
+function restore(str){const o=JSON.parse(str);const bars0=S.bars;Object.assign(S,o);sel.clear();fixProfile();if(S.bars!==bars0){$('bars').value=S.bars;layout()}changed(true)}
 function undo(){if(!undoStack.length)return;redoStack.push(snap());restore(undoStack.pop())}
 function redo(){if(!redoStack.length)return;undoStack.push(snap());restore(redoStack.pop())}
 let saveT=0;
@@ -1422,6 +1454,7 @@ function layout(){
   sizeCv(gridCv,gx,GW,GH);
   const rw=$('rulerW');sizeCv(rulerCv,rx,rw.clientWidth,rw.clientHeight);
   sizeCv(chordCv,chG,$('chordW').clientWidth,$('chordW').clientHeight);
+  if(bkx)sizeCv(blkCv,bkx,$('blkW').clientWidth,$('blkW').clientHeight);
   sizeCv(keysCv,kx,RS.kW,GH);
   sizeCv(velCv,vx,$('velW').clientWidth,$('velW').clientHeight);
   sizeCv(profCv,px,$('profW').clientWidth,$('profW').clientHeight);
@@ -1435,9 +1468,9 @@ new ResizeObserver(layout).observe($('roll'));
 const RS={gH:420,vH:64,pH:72,fH:72,tH:72,nH:72,aH:72,oH:72,rH:72,rowH:14,kW:64,prevG:0};
 try{Object.assign(RS,JSON.parse(localStorage.getItem('arploom.roll'))||{})}catch(e){}
 const saveRS=()=>{try{localStorage.setItem('arploom.roll',JSON.stringify(RS))}catch(e){}};
-const LANE_KEYS=['vH','pH','fH','tH','nH','aH','oH','rH'];
+const LANE_KEYS=['vH','pH','fH','tH','nH','aH','oH','rH'],HEADS=102;   // HEADS: timeline + sections + chords rows
 function laneNeeds(){   // the height each lane label needs to show every control
-  const labs=[...document.querySelectorAll('.roll .lab')].slice(1),rg=document.createRange();
+  const labs=[...document.querySelectorAll('.roll .lab:not(.lab-fixed)')],rg=document.createRange();
   return LANE_KEYS.map((k,i)=>{const l=labs[i];if(!l)return 22;l.classList.add('lane');rg.selectNodeContents(l);
     return Math.max(22,Math.ceil(rg.getBoundingClientRect().bottom-l.getBoundingClientRect().top+5))});
 }
@@ -1446,16 +1479,16 @@ function fitRoll(){   // the roll fills one screen: lanes never shrink below the
   const need=laneNeeds();LANE_KEYS.forEach((k,i)=>D[k]=Math.max(D[k],need[i]));
   const avail=viewH()-(r.getBoundingClientRect().top+window.scrollY)-4-(sb&&sb.offsetHeight?sb.offsetHeight+10:0)-(bb?bb.offsetHeight+8:0)-2;
   let lanes=LANE_KEYS.reduce((a,k)=>a+D[k],0);const minG=Math.max(90,avail*.45);
-  if(avail-76-lanes<minG){   // squeeze only the spare room above each lane's minimum
-    const room=avail-76-minG,base=need.reduce((a,b)=>a+b,0),spare=lanes-base,f=spare>0?Math.max(0,room-base)/spare:0;
+  if(avail-HEADS-lanes<minG){   // squeeze only the spare room above each lane's minimum
+    const room=avail-HEADS-minG,base=need.reduce((a,b)=>a+b,0),spare=lanes-base,f=spare>0?Math.max(0,room-base)/spare:0;
     LANE_KEYS.forEach((k,i)=>D[k]=need[i]+Math.floor((D[k]-need[i])*Math.min(1,f)));lanes=LANE_KEYS.reduce((a,k)=>a+D[k],0)}
-  D.gH=RS.gH=Math.max(90,Math.floor(avail-76-lanes));return D;
+  D.gH=RS.gH=Math.max(90,Math.floor(avail-HEADS-lanes));return D;
 }
 function applyRoll(){
   const r=$('roll');r.style.setProperty('--kW',RS.kW+'px');const D=fitRoll();
   ['gH',...LANE_KEYS].forEach(k=>r.style.setProperty('--'+k,D[k]+'px'));
   const kg=r.querySelector('.kgrip');if(kg)kg.style.left=RS.kW+'px';
-  const g=[...r.querySelectorAll('.rgrip')];let y=50+26;['gH',...LANE_KEYS].forEach((k,i)=>{y+=D[k];if(g[i])g[i].style.top=y+'px'});
+  const g=[...r.querySelectorAll('.rgrip')];let y=HEADS;['gH',...LANE_KEYS].forEach((k,i)=>{y+=D[k];if(g[i])g[i].style.top=y+'px'});
   if(typeof S!=='undefined'&&S)layout();
   if(SH.on)fitSheet();
 }
@@ -1526,6 +1559,8 @@ function drawGrid(){
     }
   }
   if(secRange){const a=Math.min(secRange.a,secRange.b)*k-sx,b=Math.max(secRange.a,secRange.b)*k-sx;g.fillStyle='rgba(255,184,107,.09)';g.fillRect(a,0,b-a,H);g.fillStyle='#ffb86b';g.fillRect(a,0,1,H);g.fillRect(b,0,1,H)}
+  for(const c of cloneRanges()){const x0=c.a*k-sx,x1=c.b*k-sx;if(x1<0||x0>W)continue;g.fillStyle=c.src?'rgba(255,184,107,.10)':'rgba(120,255,170,.13)';g.fillRect(x0,0,x1-x0,H);
+    g.strokeStyle=c.src?'#ffb86b':'#78ffaa';g.setLineDash([6,4]);g.lineWidth=1.5;g.strokeRect(x0+.75,.75,x1-x0-1.5,H-1.5);g.setLineDash([])}
   if(marq){g.strokeStyle='#ffb86b';g.setLineDash([4,3]);g.strokeRect(Math.min(marq.x0,marq.x1)-sx+.5,Math.min(marq.y0,marq.y1)-sy+.5,Math.abs(marq.x1-marq.x0),Math.abs(marq.y1-marq.y0));g.setLineDash([])}
   const hx=curPos()*k-sx;if(hx>=0&&hx<=W){g.fillStyle='#ffb86b';g.fillRect(hx,0,1.5,H)}
 }
@@ -1561,9 +1596,11 @@ function drawRuler(){
     if(drag&&drag.mode==='secmove'&&drag.dt){const d=drag.dt*k;g.setLineDash([4,3]);g.strokeStyle='#fff';g.strokeRect(a+d+.5,.5,b-a,49);g.setLineDash([])}}
   if(laneDrag&&laneDrag.mode==='range'){const a=Math.min(laneDrag.a,laneDrag.b)*k-sx,b=Math.max(laneDrag.a,laneDrag.b)*k-sx;
     g.fillStyle='rgba(255,184,107,.15)';g.fillRect(a,20,b-a,30);g.strokeStyle='#ffb86b';g.setLineDash([4,3]);g.strokeRect(a+.5,21.5,b-a,27);g.setLineDash([])}
-  if(CLIP){const kind=CLIP.type==='segs'?'segs':CLIP.type,grid=kind==='segs'||kind==='section'?TPQ:snapT(),px=pasteTarget(kind,grid)*k-sx;
+  if(CLIP){const kind=CLIP.type==='segs'?'segs':CLIP.type,grid=kind==='segs'||kind==='section'?(CLIP.blk?1920:TPQ):snapT(),px=pasteTarget(kind,grid)*k-sx;
     if(px>=-40&&px<=W){g.fillStyle='#4fe3ff';g.beginPath();g.moveTo(px-5,11);g.lineTo(px+5,11);g.lineTo(px,19);g.fill();g.fillRect(px,19,1,31);
       g.font='600 9px system-ui';g.fillText('paste',px+6,10)}}
+  for(const c of cloneRanges()){const x0=c.a*k-sx,x1=c.b*k-sx;if(x1<0||x0>W)continue;g.fillStyle=c.src?'rgba(255,184,107,.55)':'rgba(120,255,170,.5)';g.fillRect(x0,0,x1-x0,20);
+    g.fillStyle='#0b0d12';g.font='600 10px system-ui';g.fillText(c.src?'copy from':'copy '+c.n,Math.max(x0,0)+4,13)}
   const ex=total*k-sx;if(ex<W){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(ex,0,W-ex,50)}
   const hx=curPos()*k-sx;if(hx>=-6&&hx<=W){g.fillStyle='#ffb86b';g.beginPath();g.moveTo(hx-5,0);g.lineTo(hx+5,0);g.lineTo(hx,8);g.fill();g.fillRect(hx,0,1.5,50)}
 }
@@ -1887,7 +1924,7 @@ function frame(){
   if(P.playing&&S.follow!==false&&follow){
     const x=curPos()*ppt();if(x<scroller.scrollLeft||x>scroller.scrollLeft+GW-40)scroller.scrollLeft=Math.max(0,x-40);
   }
-  drawGrid();drawKeys();drawRuler();drawChords();drawVel();drawProf();drawFlt();drawTune();drawPan();artLane.draw();porLane.draw();rateLane.draw();drawScope();chFollow();renderSecBar();if(window.goatFrame)goatFrame();
+  drawGrid();drawKeys();drawRuler();drawBlocks();drawChords();drawVel();drawProf();drawFlt();drawTune();drawPan();artLane.draw();porLane.draw();rateLane.draw();drawScope();chFollow();renderSecBar();if(window.goatFrame)goatFrame();
   $('pos').textContent=posText(curPos());
   requestAnimationFrame(frame);
 }
@@ -1930,6 +1967,7 @@ gridCv.addEventListener('mousedown',e=>{
 });
 window.addEventListener('mousemove',e=>{
   if(!drag){hoverCursor(e);return}
+  if(String(drag.mode).startsWith('blk'))return;
   if(drag.mode==='vel'||drag.mode==='prof'||drag.mode==='flt'||drag.mode==='tune'||drag.mode==='pan'||String(drag.mode).startsWith('ln_')||drag.mode==='lane'||drag.mode==='chsel'||drag.mode==='chshift')return;
   const pt=gridPt(e),k=ppt(),total=totalTicks(),sn=snapT();
   if(drag.mode==='shiftpress'){if(Math.abs(e.clientX-drag.x0)+Math.abs(e.clientY-drag.y0)<4)return;marq={x0:drag.mx,y0:drag.my,x1:pt.x,y1:pt.y};drag={mode:'marq'};return}
@@ -1955,7 +1993,7 @@ window.addEventListener('mousemove',e=>{
   }else if(drag.mode==='marq'){marq.x1=pt.x;marq.y1=pt.y}
 });
 window.addEventListener('mouseup',e=>{
-  if(!drag)return;
+  if(!drag||String(drag.mode).startsWith('blk'))return;   // section blocks finish their own drags
   if(drag.mode==='shiftpress'){const h=drag.hit;sel.has(h)?sel.delete(h):sel.add(h)}
   else if(drag.mode==='press'){if(tool!=='select'){pushUndo();removeNotes([drag.hit])}}   // Draw tool: click on a note (no drag) = erase
   else if(drag.mode==='marq'){
@@ -1981,7 +2019,7 @@ scroller.addEventListener('wheel',e=>{
   const r=scroller.getBoundingClientRect(),mx=e.clientX-r.left,t=(mx+scroller.scrollLeft)/ppt();
   setZoom(S.view.zoom*(e.deltaY<0?1.15:1/1.15),mx);
 },{passive:false});
-for(const w of ['rulerW','chordW','velW','profW','fltW','tuneW','panW','artW','porW','rateW'])$(w).addEventListener('wheel',e=>{scroller.scrollLeft+=e.deltaX||e.deltaY;e.preventDefault()},{passive:false});
+for(const w of ['rulerW','blkW','chordW','velW','profW','fltW','tuneW','panW','artW','porW','rateW'])$(w).addEventListener('wheel',e=>{scroller.scrollLeft+=e.deltaX||e.deltaY;e.preventDefault()},{passive:false});
 keysCv.addEventListener('mousedown',e=>{const r=keysCv.getBoundingClientRect(),p=HI-Math.floor((e.clientY-r.top+scroller.scrollTop)/ROWH);keyHi=p;previewNote(p);setTimeout(()=>{if(keyHi===p)keyHi=-1},250)});
 keysCv.addEventListener('wheel',e=>{scroller.scrollTop+=e.deltaY;e.preventDefault()},{passive:false});
 
@@ -2081,7 +2119,7 @@ function laneUp(){
 }
 /* ---------- where pastes land: the spot you last clicked, otherwise the next empty bar ---------- */
 let clickT=null;   // set by clicking the ruler, an empty spot in the Chords strip, or the roll with the Select tool; used once
-function setPasteSpot(t){clickT=clamp(t,0,totalTicks()-1)}
+function setPasteSpot(t){clickT=clamp(t,0,512*1920-1)}   // may be past the end: pasting there makes the song longer
 function contentEnd(kind){let e=0;
   if(kind!=='segs')for(const n of S.notes)e=Math.max(e,n.s+n.l);
   if(kind==='segs'||kind==='section')for(const g of S.segs)e=Math.max(e,g.s+g.l);
@@ -2133,11 +2171,12 @@ function secCopy(){
 }
 function secClear(a,b){S.notes=S.notes.filter(n=>n.s<a||n.s>=b);const tmp={id:-1,s:a,l:b-a};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp)}
 function secPaste(at,noUndo){
-  if(!noUndo)pushUndo();at=at??takePasteAt('section',TPQ);const span=CLIP.span;
+  if(!noUndo)pushUndo();at=at??takePasteAt('section',CLIP.blk?1920:TPQ);const span=CLIP.span;
   if(at+span>totalTicks()){S.bars=clamp(Math.ceil((at+span)/1920),1,512);$('bars').value=S.bars;fixProfile();layout()}
-  const total=totalTicks();secClear(at,at+span);sel.clear();
+  const total=totalTicks();rangeClear(at,at+span);sel.clear();
   for(const it of CLIP.notes){const s0=at+it.r;if(s0>=total)continue;const n={id:nextId++,p:it.p,s:s0,l:Math.min(it.l,total-s0),v:it.v};S.notes.push(n);sel.add(n)}
   for(const it of CLIP.segs){const s0=at+it.r;if(s0>=total)continue;const g={id:nextId++,s:s0,l:Math.min(it.l,total-s0),pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
+  if(CLIP.blk){const nb={id:nextId++,s:at,l:Math.min(span,total-at),loop:Math.min(CLIP.blk.loop,span),name:CLIP.blk.name,h:CLIP.blk.h};blkPlace(nb);selBlk=nb.id;focusArea='blocks';secRange=null;changed(true);status(`Pasted section ${nb.name} at ${barTxt(at,nb.l)}.`);return}
   secRange={a:at,b:Math.min(total,at+span)};changed(true);status(`Pasted section at bar ${+(at/1920+1).toFixed(2)}.`);
 }
 function secMove(dt){
@@ -2147,6 +2186,10 @@ function secMove(dt){
 function secDelete(){if(!secRange)return;pushUndo();secClear(secRange.a,secRange.b);changed(true);status('Section cleared.')}
 let secSig='';
 function renderSecBar(){
+  if(selBlk!=null&&focusArea!=='blocks')selBlk=null;   // touching anything else lets go of the block
+  const bk=selBlk!=null?(S.blocks||[]).find(x=>x.id===selBlk):null;
+  if(bk){const bs='blk:'+bk.id+':'+bk.s+':'+bk.l+':'+bk.name;if(bs!==secSig){secSig=bs;renderBlkBar(bk)}return}
+  if(selBlk!=null)selBlk=null;
   const sig=secRange?secRange.a+'-'+secRange.b+(CLIP?CLIP.type:''):(CLIP&&CLIP.type==='section'?'clip':'');if(sig===secSig)return;secSig=sig;
   const bar=$('secBar');bar.innerHTML='';
   if(!secRange&&!(CLIP&&CLIP.type==='section')){bar.classList.remove('show');return}
@@ -2185,12 +2228,23 @@ function resolveOverlaps(a){
 window.addEventListener('keydown',e=>{
   const tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='select'||tag==='textarea')return;
   const ctrl=e.ctrlKey||e.metaKey;
+  if(focusArea==='blocks'&&selBlk!=null){const bk=(S.blocks||[]).find(x=>x.id===selBlk);
+    if(bk){if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();blkDelete(bk);return}
+      if(ctrl&&e.key.toLowerCase()==='d'){e.preventDefault();blkDup(bk);return}
+      if(ctrl&&e.key.toLowerCase()==='c'){e.preventDefault();blkCopy(bk);return}
+      if(ctrl&&e.key.toLowerCase()==='x'){e.preventDefault();blkCopy(bk);blkDelete(bk);status(`Cut section ${bk.name} — Ctrl+V pastes it.`);return}
+      if(e.key==='Escape'){selBlk=null;return}}}
+  if(focusArea==='blocks'&&ctrl&&e.key.toLowerCase()==='v'){e.preventDefault();pasteClip();return}
   if(e.code==='Space'){e.preventDefault();P.playing?stop():play();return}
   if(!ctrl&&e.key.toLowerCase()==='b'){setTool('draw');return}
   if(!ctrl&&e.key.toLowerCase()==='v'){setTool('select');return}
   if(!ctrl&&e.key.toLowerCase()==='r'){e.preventDefault();P.rec?recStop():recStart();return}
   if(!ctrl&&e.key.toLowerCase()==='q'){e.preventDefault();quantise();return}
   if(focusArea==='chords'&&ctrl&&e.key.toLowerCase()==='z'&&!e.shiftKey){e.preventDefault();if(!chUndoLast())undo();return}
+  if(focusArea==='chords'&&ctrl){const k=e.key.toLowerCase();
+    if(k==='c'){e.preventDefault();chCopyTok();return}
+    if(k==='x'){e.preventDefault();const it=chParsed.items[chSel];if(chCopyTok()&&it)deleteTok(it.tok);return}
+    if(k==='v'){e.preventDefault();chPasteTok();return}}
   if(ctrl&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
   if(ctrl&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
   if(ctrl&&focusArea==='lane'){const k=e.key.toLowerCase();
@@ -2578,7 +2632,7 @@ $('bLoop').onclick=()=>{S.loop=!S.loop;$('bLoop').classList.toggle('on',S.loop);
 $('bFollow').onclick=()=>{follow=!follow;$('bFollow').classList.toggle('on',follow)};
 $('bShowArp').onclick=()=>{showArp=!showArp;$('bShowArp').classList.toggle('on',showArp)};
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;
-$('bClear').onclick=()=>{if(!S.notes.length)return;pushUndo();S.notes=[];sel.clear();changed()};
+$('bClear').onclick=()=>{if(!S.notes.length&&!(S.blocks||[]).length)return;pushUndo();S.notes=[];S.blocks=[];selBlk=null;sel.clear();changed()};
 $('bpm').onchange=()=>{S.bpm=clamp(+$('bpm').value||120,30,300);$('bpm').value=S.bpm;reanchor();updateFX(live);saveSoon()};
 $('bars').onchange=()=>{pushUndo();S.bars=clamp(+$('bars').value|0||1,1,512);$('bars').value=S.bars;fixProfile();layout();changed(true)};
 $('snap').onchange=()=>{S.view.snap=+$('snap').value;saveSoon()};
@@ -2621,15 +2675,13 @@ function wav24(buf){
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
 const fname=()=>($('fname').value.trim()||'super-goat-arpeggiator').replace(/[\\/:*?"<>|]+/g,'_');
 let rendering=false;
-$('bWav').onclick=async()=>{
-  if(rendering)return;if(!ARP.length){status('Nothing to render — draw some notes first.');return}
-  rendering=true;$('bWav').disabled=true;
-  try{
-    const sr=48000,loops=clamp(+$('loops').value|0||1,1,64),total=totalTicks(),T=tps(),Y=clone(S.synth);
+// the whole song through the synth, every drawn lane and the effects (delay, reverb, master volume, compressor), with the tails
+async function renderSong(o={}){
+    const sr=o.sr||48000,loops=o.loops||clamp(+$('loops').value|0||1,1,64),total=totalTicks(),T=tps(),Y=o.synth||clone(S.synth);
     const songSec=loops*total/T,fb=Math.max(Y.delay.fb,.01);
-    const dTail=Y.delay.mix>0?Math.min(10,delaySec()*Math.log(.001)/Math.log(fb)):0;
+    const dTail=Y.delay.mix>0?Math.min(10,delaySec(Y)*Math.log(.001)/Math.log(fb)):0;
     const tail=Math.min(20,Y.amp.r*1.6+Math.max(Y.rev.mix>0?Y.rev.size:0,dTail)+.3);
-    const len=Math.ceil((songSec+tail)*sr),ctx=new OfflineAudioContext(2,len,sr),fx=buildFX(ctx,ctx.destination);
+    const len=Math.ceil((songSec+tail)*sr),ctx=new OfflineAudioContext(2,len,sr),fx=buildFX(ctx,ctx.destination,Y);
     const evs=[];for(let L=0;L<loops;L++)for(const e of ARP)evs.push({at:(L*total+e.t)/T,d:e.d/T,p:e.p,v:e.v,fc:e.fc,tp:tunePts(e.t,e.d,T),pn:e.pn,gl:e.gl?[e.gl[0],e.gl[1]/T]:null});
     evs.sort((a,b)=>a.at-b.at);let ptr=0;
     const upTo=tEnd=>{while(ptr<evs.length&&evs[ptr].at<tEnd){const e=evs[ptr++];voice(ctx,fx.input,e.p,e.at,e.d,e.v,Y,false,e.fc,e.tp,e.pn,e.gl)}};
@@ -2637,6 +2689,13 @@ $('bWav').onclick=async()=>{
     for(let c=1;c*CH<songSec;c++){const at=c*CH-.1;ctx.suspend(at).then(()=>{upTo((c+1)*CH);status(`Rendering… ${Math.min(100,Math.round(at/songSec*100))}%`);ctx.resume()})}
     status('Rendering…');
     const buf=await ctx.startRendering();
+    return{buf,len,sr};
+}
+$('bWav').onclick=async()=>{
+  if(rendering)return;if(!ARP.length){status('Nothing to render — draw some notes first.');return}
+  rendering=true;$('bWav').disabled=true;
+  try{
+    const{buf,len,sr}=await renderSong();
     if($('normalize').checked){let pk=0;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
       if(pk>0){const g=Math.pow(10,-1/20)/pk;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]*=g}}}
     download(wav24(buf),fname()+'.wav');
@@ -2987,12 +3046,14 @@ function chWrite(){
     }
     t+=it.dur;
   }
+  {const bEnd=Math.min(total,Math.ceil(end/1920)*1920);   // a section block over what was written
+    if(bEnd>start){const b={id:nextId++,s:start,l:bEnd-start,loop:bEnd-start,name:nextBlkName(),h:nextBlkHue()};blkPlace(b);selBlk=b.id;focusArea='blocks'}}
   changed(true);
   scroller.scrollLeft=Math.max(0,start*ppt()-40);
   const avg=[...sel].reduce((a,n)=>a+n.p,0)/(sel.size||1);scroller.scrollTop=Math.max(0,(HI-avg)*ROWH-GH/2);
   const rest=S.notes.filter(n=>n.s>=end),cr=$('chClearRest');
   if(rest.length){const b0=end/1920+1,b1=Math.ceil(Math.max(...rest.map(n=>n.s+n.l))/1920);
-    cr.hidden=false;cr.textContent=`✂ Clear bars ${Math.floor(b0)}–${Math.max(Math.floor(b0),b1)}`;cr.onclick=()=>{pushUndo();S.notes=S.notes.filter(n=>n.s<end);changed(true);cr.hidden=true;status('Cleared the older notes after your progression.')}}
+    cr.hidden=false;cr.textContent=`✂ Clear bars ${Math.floor(b0)}–${Math.max(Math.floor(b0),b1)}`;cr.onclick=()=>{pushUndo();S.notes=S.notes.filter(n=>n.s<end);const eb=Math.ceil(end/1920)*1920;S.blocks=(S.blocks||[]).filter(b=>b.s<eb);for(const b of S.blocks)if(b.s+b.l>eb){b.l=eb-b.s;b.loop=Math.min(b.loop||b.l,b.l)}changed(true);cr.hidden=true;status('Cleared the older notes after your progression.')}}
   else cr.hidden=true;
   status(`Wrote ${its.filter(i=>i.chord).length} chords (${sel.size} notes) from bar ${c.start}.`+(rest.length?` ${rest.length} older notes are still after it — “✂ Clear” removes them.`:''));
 }
@@ -3634,7 +3695,7 @@ function sheetGeom(){
   if(showArp)for(const e of ARP){if(e.p<lo)lo=e.p;if(e.p>hi)hi=e.p}
   if(lo>hi){lo=55;hi=72}
   lo=Math.max(LO,lo-2);hi=Math.min(HI,hi+2);if(hi-lo<11){lo=Math.max(LO,Math.min(lo,hi-11));hi=Math.min(HI,lo+11)}
-  const rh=clamp(+SH.rh||5,2,14),HEAD=24,GAP=16,sysH=HEAD+(hi-lo+1)*rh,n=Math.ceil(barsN/bps),barW=(W-ML-MR)/bps;
+  const rh=clamp(+SH.rh||5,2,14),HEAD=(S.blocks&&S.blocks.length)?36:24,GAP=16,sysH=HEAD+(hi-lo+1)*rh,n=Math.ceil(barsN/bps),barW=(W-ML-MR)/bps;
   return SHL={W,ML,MR,bps,lo,hi,rh,HEAD,GAP,sysH,n,barW,k:barW/1920,span:bps*1920,total,full:GAP+n*(sysH+GAP)};
 }
 // pointer -> song time + pitch. x/y are given in the editing code's units (x = t*ppt(), y = rows*ROWH), so all the roll's editing works here
@@ -3643,7 +3704,7 @@ function sheetPt(e){
   const sys=clamp(Math.floor((y-L.GAP/2)/(L.sysH+L.GAP)),0,L.n-1),top=L.GAP+sys*(L.sysH+L.GAP);
   const t=clamp(sys*L.span+(x-L.ML)/L.k,sys*L.span,Math.max(sys*L.span,Math.min(L.total,(sys+1)*L.span)-1));
   const fr=(y-top-L.HEAD)/L.rh;
-  return{x:t*L.k,y:(HI-L.hi+fr)*ROWH,t,p:L.hi-Math.floor(fr),head:fr<0,margin:x<L.ML,sys};
+  return{x:t*L.k,y:(HI-L.hi+fr)*ROWH,t,p:L.hi-Math.floor(fr),head:fr<0,margin:x<L.ML,sys,yIn:y-top};
 }
 function fitSheet(){
   const b=$('sheetBox');if(b.hidden)return;
@@ -3675,10 +3736,13 @@ function drawSheet(){
     for(let t=t0;t<=t0+L.span;t+=TPQ){const bar=t%1920===0;if(!bar&&beatPx<6)continue;g.fillStyle=bar?'#3a4560':'#1b2130';g.fillRect(Math.round(xs(t)),ry,1,sh)}
     // head strip: bar numbers + chord names (tap it to move the playhead)
     g.fillStyle='#10131a';g.fillRect(L.ML,top,IW,L.HEAD);
-    for(let b=0;b<L.bps;b++){const t=t0+b*1920;if(t>=t1)break;const x=xs(t);g.fillStyle='#39425a';g.fillRect(x,top,1,L.HEAD);g.fillStyle='#8490a8';g.font='9px system-ui';g.fillText(String(t/1920+1),x+3,top+9)}
+    if(L.HEAD>24)for(const bk of S.blocks){const a=Math.max(bk.s,t0),b=Math.min(bk.s+bk.l,t1);if(b<=a)continue;const on=bk.id===selBlk;
+      g.fillStyle=`hsla(${bk.h},62%,${on?52:40}%,.95)`;g.fillRect(xs(a)+1,top+1,(b-a)*L.k-2,11);if(on){g.strokeStyle='#fff';g.lineWidth=1;g.strokeRect(xs(a)+1.5,top+1.5,(b-a)*L.k-3,10)}
+      g.save();g.beginPath();g.rect(xs(a)+2,top,Math.max(0,(b-a)*L.k-4),12);g.clip();g.fillStyle='#0b0d12';g.font='700 9px system-ui';g.fillText((bk.s<t0?'… ':'')+bk.name,xs(a)+4,top+10);g.restore()}
+    for(let b=0;b<L.bps;b++){const t=t0+b*1920;if(t>=t1)break;const x=xs(t);g.fillStyle='#39425a';g.fillRect(x,top,1,L.HEAD);g.fillStyle='#8490a8';g.font='9px system-ui';g.fillText(String(t/1920+1),x+3,top+9+L.HEAD-24)}
     g.font='600 11px system-ui';
     for(const c of blocks){if(c.e<=t0||c.s>=t1||!c.name)continue;const a=Math.max(c.s,t0),b=Math.min(c.e,t1),x=xs(a),w=(b-a)*L.k;
-      g.save();g.beginPath();g.rect(x+1,top,Math.max(0,w-2),L.HEAD);g.clip();g.fillStyle=c.s<t0?'#8a7fb0':'#d8c8ff';g.fillText(c.name,x+3,top+21);g.restore()}
+      g.save();g.beginPath();g.rect(x+1,top,Math.max(0,w-2),L.HEAD);g.clip();g.fillStyle=c.s<t0?'#8a7fb0':'#d8c8ff';g.fillText(c.name,x+3,top+21+L.HEAD-24);g.restore()}
     // the system's first bar number in the margin
     g.fillStyle='#cfd6e6';g.font='bold 12px system-ui';g.textAlign='right';g.fillText(String(t0/1920+1),L.ML-6,top+15);g.textAlign='left';
     // your notes
@@ -3699,6 +3763,8 @@ function drawSheet(){
       if(b>a){const pHi=HI-Math.floor(Math.min(marq.y0,marq.y1)/ROWH),pLo=HI-Math.floor(Math.max(marq.y0,marq.y1)/ROWH);
         const yA=ry+(L.hi-clamp(pHi,L.lo,L.hi))*L.rh,yB=ry+(L.hi-clamp(pLo,L.lo,L.hi)+1)*L.rh;
         g.strokeStyle='#ffb86b';g.setLineDash([4,3]);g.strokeRect(xs(a)+.5,yA+.5,(b-a)*L.k,yB-yA);g.setLineDash([])}}
+    for(const c of cloneRanges()){const a=Math.max(c.a,t0),b=Math.min(c.b,t1);if(b<=a)continue;g.fillStyle=c.src?'rgba(255,184,107,.12)':'rgba(120,255,170,.15)';g.fillRect(xs(a),top,(b-a)*L.k,L.HEAD+sh);
+      g.strokeStyle=c.src?'#ffb86b':'#78ffaa';g.setLineDash([6,4]);g.lineWidth=1.5;g.strokeRect(xs(a)+.75,top+.75,(b-a)*L.k-1.5,L.HEAD+sh-1.5);g.setLineDash([])}
     if(pos>=t0&&pos<t1){g.fillStyle='#ffb86b';g.fillRect(xs(pos),top,1.5,L.HEAD+sh)}
     g.strokeStyle='#232a3a';g.lineWidth=1;g.strokeRect(L.ML+.5,top+.5,IW-1,L.HEAD+sh-1);
   }
@@ -3707,12 +3773,14 @@ function drawSheet(){
 sheetCv.addEventListener('mousedown',e=>{
   const L=SHL||sheetGeom(),pt=sheetPt(e);
   if(pt.margin)return;
+  if(pt.head&&L.HEAD>24&&pt.yIn<13){const bk=S.blocks.find(b=>pt.t>=b.s&&pt.t<b.s+b.l);selBlk=bk?bk.id:null;focusArea='blocks';
+    if(bk&&(e.button===2||blkDoubleTap(bk,e)))blkMenuOpen(bk,e.clientX,e.clientY+10);return}   // the block band: pick a section (double-tap / right-click: its menu)
   if(pt.head){focusArea='ruler';seek(Math.round(pt.t/TPQ)*TPQ);return}   // the strip above a system moves the playhead
   if(pt.p<L.lo||pt.p>L.hi)return;
   gridCv.dispatchEvent(new MouseEvent('mousedown',{clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY,button:e.button,buttons:e.buttons,
     shiftKey:e.shiftKey,ctrlKey:e.ctrlKey,altKey:e.altKey,metaKey:e.metaKey,cancelable:true}));
 });
-sheetCv.addEventListener('contextmenu',e=>e.preventDefault());
+sheetCv.addEventListener('contextmenu',e=>{e.preventDefault();const L=SHL||sheetGeom(),pt=sheetPt(e);if(pt.head&&L.HEAD>24&&pt.yIn<13){const bk=S.blocks.find(b=>pt.t>=b.s&&pt.t<b.s+b.l);if(bk)blkMenuOpen(bk,e.clientX,e.clientY)}});
 sheetCv.addEventListener('mousemove',e=>{if(drag)return;const L=SHL||sheetGeom(),pt=sheetPt(e);
   if(pt.head){sheetCv.style.cursor='pointer';return}
   const n=pt.p>=L.lo&&pt.p<=L.hi?noteAt(pt.t,pt.p):null;
@@ -3877,6 +3945,318 @@ function quantise(list,opts={}){
   const what=()=>{const n=sel.size;$('qWhat').textContent=n?`the ${n} selected note${n===1?'':'s'}`:S&&S.notes?`all ${S.notes.length} notes`:''};
   setInterval(what,500);ui();
 })();
+
+
+/* ---------- clone bars: copy bars A–B to bar D (× N copies), exactly on the bar lines ---------- */
+var CLONEP=null;   // the preview while the box is open: {A,B,D,span,times}
+function cloneRanges(){if(!CLONEP)return[];const c=CLONEP,out=[{a:c.A,b:c.B,src:true}];for(let i=0;i<c.times;i++)out.push({a:c.D+i*c.span,b:c.D+(i+1)*c.span,n:i+1});return out}
+const CLONE_LANES=['prof','fprof','tprof','pprof','aprof','oprof','rprof'];
+function cloneBars(a,b,d,times,o={}){
+  a=Math.round(a);b=Math.round(b);d=Math.round(d);times=clamp(Math.round(times)||1,1,64);
+  if(b<a)[a,b]=[b,a];
+  if(!(a>=1&&d>=1)){status('Clone: bar numbers start at 1.');return false}
+  if(a>S.bars){status(`Clone: the song only has ${S.bars} bars.`);return false}
+  b=Math.min(b,S.bars);
+  const A=(a-1)*1920,B=b*1920,span=B-A,D=(d-1)*1920,end=D+span*times;
+  if(end>512*1920){status('Clone: that would run past bar 512.');return false}
+  // take the copy first: the copies may land on top of the bars they come from
+  const notes=S.notes.filter(n=>n.s>=A&&n.s<B).map(n=>({r:n.s-A,l:Math.min(n.l,B-n.s),p:n.p,v:n.v}));
+  const segs=o.segs?S.segs.filter(g=>g.s<B&&g.s+g.l>A).map(g=>{const s0=Math.max(g.s,A),e0=Math.min(g.s+g.l,B);return{r:s0-A,l:e0-s0,pat:g.pat,rate:g.rate||0,oct:g.oct||0}}):[];
+  const lanes=o.lanes?CLONE_LANES.map(k=>(S[k]||[]).slice(A/STEP,B/STEP)):null;
+  const blks=(S.blocks||[]).filter(x=>x.s<B&&x.s+x.l>A).map(x=>{const s0=Math.max(x.s,A),e0=Math.min(x.s+x.l,B);return{r:s0-A,l:e0-s0,loop:Math.min(x.loop||x.l,e0-s0),name:x.name,h:x.h}});
+  pushUndo();
+  if(end>totalTicks()){S.bars=clamp(Math.ceil(end/1920),1,512);$('bars').value=S.bars;fixProfile();layout()}
+  sel.clear();
+  for(let i=0;i<times;i++){
+    const at=D+i*span,to=at+span;
+    // clear the landing bars: notes starting there go, and anything ringing in from earlier stops at the bar line
+    S.notes=S.notes.filter(n=>n.s<at||n.s>=to);
+    for(const n of S.notes)if(n.s<at&&n.s+n.l>at)n.l=at-n.s;
+    if(o.segs){const tmp={id:-1,s:at,l:span};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp)}
+    for(const it of notes){const n={id:nextId++,p:it.p,s:at+it.r,l:it.l,v:it.v};S.notes.push(n);sel.add(n)}
+    for(const it of segs){const g={id:nextId++,s:at+it.r,l:it.l,pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
+    if(lanes)CLONE_LANES.forEach((k,j)=>{const arr=S[k];if(Array.isArray(arr))lanes[j].forEach((v,q)=>{arr[at/STEP+q]=v})});
+    {const tmp={id:-1,s:at,l:span};blkPlace(tmp);S.blocks=S.blocks.filter(x=>x!==tmp);for(const it of blks)blkPlace({id:nextId++,s:at+it.r,l:it.l,loop:it.loop,name:it.name,h:it.h})}
+  }
+  changed(true);
+  const nb=b-a+1,last=d+nb*times-1;
+  status(`Cloned bar${nb>1?`s ${a}–${b}`:` ${a}`} → bar${last>d?`s ${d}–${last}`:` ${d}`}${times>1?` (${times} copies)`:''}.`);
+  return true;
+}
+(function(){
+  const card=$('cloneCard'),F=$('ccFrom'),T=$('ccTo'),AT=$('ccAt'),N=$('ccTimes');
+  let atAuto=true;
+  const vals=()=>{let a=Math.round(+F.value)||1,b=Math.round(+T.value)||a;if(b<a)[a,b]=[b,a];return{a,b,d:Math.max(1,Math.round(+AT.value)||1),n:clamp(Math.round(+N.value)||1,1,64)}};
+  const upd=()=>{
+    if(atAuto){const v=vals();AT.value=v.b+1}
+    const v=vals(),info=$('ccInfo'),nb=v.b-v.a+1,last=v.d+nb*v.n-1;
+    let msg,bad=false;
+    if(v.a>S.bars){msg=`The song only has ${S.bars} bars.`;bad=true}
+    else if(last>512){msg='That would run past bar 512.';bad=true}
+    else{msg=`Copies bar${nb>1?`s ${v.a}–${Math.min(v.b,S.bars)}`:` ${v.a}`} into bar${last>v.d?`s ${v.d}–${last}`:` ${v.d}`}${v.n>1?` (${v.n} copies)`:''}, replacing what’s there.`;
+      if(last>S.bars)msg+=` The song grows to ${last} bars.`;
+      if(v.d<=Math.min(v.b,S.bars)&&last>=v.a)msg+=' (It overlaps the bars it copies from.)'}
+    info.textContent=msg;info.classList.toggle('bad',bad);$('ccGo').disabled=bad;
+    CLONEP=bad?null:{A:(v.a-1)*1920,B:Math.min(v.b,S.bars)*1920,D:(v.d-1)*1920,span:(Math.min(v.b,S.bars)-v.a+1)*1920,times:v.n};
+  };
+  const open=()=>{
+    // start from what's selected: a ruler section, or the selected notes' bars; otherwise bars 1-4
+    let a=1,b=Math.min(4,S.bars);
+    if(secRange){a=Math.floor(Math.min(secRange.a,secRange.b)/1920)+1;b=Math.max(a,Math.ceil(Math.max(secRange.a,secRange.b)/1920))}
+    else if(sel.size){const ns=[...sel];a=Math.floor(Math.min(...ns.map(n=>n.s))/1920)+1;b=Math.max(a,Math.ceil(Math.max(...ns.map(n=>n.s+n.l))/1920))}
+    F.value=a;T.value=b;N.value=N.value||1;atAuto=true;
+    $('ccSegs').checked=CLONE_OPT.segs;$('ccLanes').checked=CLONE_OPT.lanes;
+    card.hidden=false;$('cloneBtn').classList.add('on');upd();
+  };
+  const close=()=>{card.hidden=true;CLONEP=null;$('cloneBtn').classList.remove('on')};
+  const CLONE_OPT={segs:true,lanes:false};try{Object.assign(CLONE_OPT,JSON.parse(localStorage.getItem('arploom.clone'))||{})}catch(e){}
+  const saveOpt=()=>{try{localStorage.setItem('arploom.clone',JSON.stringify(CLONE_OPT))}catch(e){}};
+  $('cloneBtn').onclick=()=>card.hidden?open():close();
+  $('ccClose').onclick=close;
+  for(const inp of [F,T,AT,N]){
+    inp.addEventListener('input',()=>{if(inp===AT)atAuto=false;upd()});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('ccGo').click()}});
+  }
+  card.querySelectorAll('.ccNum button').forEach(btn=>btn.onclick=()=>{
+    const inp=$(btn.dataset.for),v=(Math.round(+inp.value)||1)+(+btn.dataset.step);
+    inp.value=clamp(v,1,inp===N?64:512);if(inp===AT)atAuto=false;upd();
+  });
+  $('ccSegs').onchange=()=>{CLONE_OPT.segs=$('ccSegs').checked;saveOpt()};
+  $('ccLanes').onchange=()=>{CLONE_OPT.lanes=$('ccLanes').checked;saveOpt()};
+  $('ccGo').onclick=()=>{
+    const v=vals();
+    if(cloneBars(v.a,v.b,v.d,v.n,{segs:CLONE_OPT.segs,lanes:CLONE_OPT.lanes})){
+      // ready for the next copy straight after this one
+      AT.value=v.d+(Math.min(v.b,S.bars)-v.a+1)*v.n;atAuto=false;upd();
+    }
+  };
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!card.hidden){close();e.preventDefault();e.stopImmediatePropagation()}},true);
+  window.cloneOpen=open;
+})();
+
+
+/* ============================ section blocks: arrangement blocks you can move, resize, duplicate, delete ============================ */
+var selBlk=null,blkCv=$('blkCv'),bkx=blkCv.getContext('2d');
+const BLK_HUES=[200,38,300,140,12,262,168,335,90,230];
+function nextBlkHue(){const used=(S.blocks||[]).map(b=>b.h);let best=BLK_HUES[0],bc=1e9;for(const h of BLK_HUES){const c=used.filter(x=>x===h).length;if(c<bc){bc=c;best=h}}return best}
+function nextBlkName(){const used=new Set((S.blocks||[]).map(b=>b.name));for(let i=0;i<26;i++){const n=String.fromCharCode(65+i);if(!used.has(n))return n}return 'S'+((S.blocks||[]).length+1)}
+// put a block in; blocks it lands on are trimmed or split so blocks never overlap
+function blkPlace(b){
+  const bE=b.s+b.l,out=[];
+  for(const x of S.blocks||[]){
+    if(x===b||x.id===b.id)continue;
+    const xE=x.s+x.l;
+    if(xE<=b.s||x.s>=bE){out.push(x);continue}
+    if(x.s<b.s&&xE>bE){out.push(Object.assign({},x,{l:b.s-x.s,loop:Math.min(x.loop||x.l,b.s-x.s)}));out.push(Object.assign({},x,{id:nextId++,s:bE,l:xE-bE,loop:xE-bE}));continue}
+    if(x.s<b.s){x.l=b.s-x.s;x.loop=Math.min(x.loop||x.l,x.l);out.push(x);continue}
+    if(xE>bE){x.l=xE-bE;x.s=bE;x.loop=x.l;out.push(x)}
+  }
+  out.push(b);S.blocks=out.sort((p,q)=>p.s-q.s);
+}
+// the music in a range: notes that start there (cut at its end) and the arp timeline
+function rangeSnap(A,B){return{span:B-A,
+  notes:S.notes.filter(n=>n.s>=A&&n.s<B).map(n=>({r:n.s-A,l:Math.min(n.l,B-n.s),p:n.p,v:n.v})),
+  segs:S.segs.filter(g=>g.s<B&&g.s+g.l>A).map(g=>{const s0=Math.max(g.s,A),e0=Math.min(g.s+g.l,B);return{r:s0-A,l:e0-s0,pat:g.pat,rate:g.rate||0,oct:g.oct||0}})}}
+function rangeClear(A,B){
+  S.notes=S.notes.filter(n=>n.s<A||n.s>=B);for(const n of S.notes)if(n.s<A&&n.s+n.l>A)n.l=A-n.s;   // nothing rings into the cleared bars
+  const tmp={id:-1,s:A,l:B-A};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp);
+}
+function rangePut(sn,at,from=at,upto=at+sn.span){
+  for(const it of sn.notes){const s0=at+it.r;if(s0<from||s0>=upto)continue;S.notes.push({id:nextId++,p:it.p,s:s0,l:Math.min(it.l,upto-s0),v:it.v})}
+  for(const it of sn.segs){const a=Math.max(at+it.r,from),e=Math.min(at+it.r+it.l,upto);if(e<=a)continue;const g={id:nextId++,s:a,l:e-a,pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
+}
+function growTo(end){if(end>totalTicks()){S.bars=clamp(Math.ceil(end/1920),1,512);$('bars').value=S.bars;fixProfile();layout()}}
+const barTxt=(s,l)=>l>1920?`bars ${s/1920+1}–${(s+l)/1920}`:`bar ${s/1920+1}`;
+function blkMove(b,to){
+  to=clamp(Math.round(to/1920)*1920,0,512*1920-b.l);if(to===b.s)return;
+  pushUndo();growTo(to+b.l);const sn=rangeSnap(b.s,b.s+b.l);rangeClear(b.s,b.s+b.l);rangeClear(to,to+b.l);rangePut(sn,to);
+  b.s=to;blkPlace(b);selBlk=b.id;focusArea='blocks';changed(true);status(`Moved section ${b.name} to ${barTxt(to,b.l)}.`);
+}
+function blkCopyTo(b,to){
+  to=clamp(Math.round(to/1920)*1920,0,512*1920-b.l);
+  pushUndo();growTo(to+b.l);const sn=rangeSnap(b.s,b.s+b.l);rangeClear(to,to+b.l);rangePut(sn,to);
+  const nb=Object.assign({},b,{id:nextId++,s:to});blkPlace(nb);selBlk=nb.id;focusArea='blocks';changed(true);status(`Copied section ${b.name} to ${barTxt(to,b.l)}.`);
+}
+function blkDup(b){if(b.s+2*b.l>512*1920){status('No room after it (the song stops at bar 512).');return}blkCopyTo(b,b.s+b.l)}
+function blkDelete(b){pushUndo();rangeClear(b.s,b.s+b.l);S.blocks=S.blocks.filter(x=>x!==b);if(selBlk===b.id)selBlk=null;changed(true);status(`Deleted section ${b.name} and its notes.`)}
+// longer = the section repeats (from its first 'loop' bars); shorter = it's cut
+function blkResize(b,L){
+  L=clamp(Math.round(L/1920)*1920,1920,512*1920-b.s);if(L===b.l)return;
+  pushUndo();
+  if(L>b.l){growTo(b.s+L);const loop=b.loop||b.l,sn=rangeSnap(b.s,b.s+loop);rangeClear(b.s+b.l,b.s+L);
+    for(let at=b.s+Math.floor(b.l/loop)*loop;at<b.s+L;at+=loop)rangePut(sn,at,b.s+b.l,b.s+L)}
+  else{rangeClear(b.s+L,b.s+b.l);b.loop=Math.min(b.loop||b.l,L)}
+  b.l=L;blkPlace(b);selBlk=b.id;focusArea='blocks';changed(true);
+  status(`Section ${b.name} is now ${L/1920} bar${L===1920?'':'s'}${L>b.loop?` (its ${b.loop/1920} bar${b.loop===1920?'':'s'} repeat)`:''}.`);
+}
+function renderBlkBar(bk){
+  const bar=$('secBar');bar.innerHTML='';bar.classList.add('show');
+  bar.append(el('b',null,`Section ${bk.name} · ${barTxt(bk.s,bk.l)} (${bk.l/1920} bar${bk.l===1920?'':'s'})`));
+  const btn=(t,f,title)=>{const b=el('button',null,t);b.title=title||'';b.onclick=()=>{focusArea='blocks';f()};bar.append(b);return b};
+  btn('⧺ Duplicate',()=>blkDup(bk),'Ctrl+D — a copy straight after it');
+  btn('✎ Rename',()=>{const n=prompt('Name this section',bk.name);if(n&&n.trim()){pushUndo();bk.name=n.trim().slice(0,24);changed(true)}});
+  const inp=el('input');inp.type='number';inp.min=1;inp.max=512;inp.inputMode='numeric';inp.value=bk.s/1920+1;inp.style.width='64px';inp.title='Bar to move it to';
+  const go=el('button',null,'Move');go.onclick=()=>{focusArea='blocks';blkMove(bk,(clamp(Math.round(+inp.value)||1,1,512)-1)*1920)};
+  inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go.click()}};
+  bar.append(el('span','legend','Move to bar'),inp,go);
+  btn('🗑 Delete',()=>blkDelete(bk),'Delete — removes the section and its notes').classList.add('danger');
+  btn('✕',()=>{selBlk=null},'Deselect (Esc)');
+  bar.append(el('span','legend','Drag to move · drag the right edge to repeat or shorten · Alt-drag copies'));
+}
+function drawBlocks(){
+  const g=bkx,W=blkCv.width/DPR,H=blkCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks();
+  g.fillStyle='#0d1017';g.fillRect(0,0,W,H);laneBars(g,sx,k,W,H);
+  const box=(s,l,h,on,alpha,label,dash)=>{const x=s*k-sx,w=l*k;if(x>W||x+w<0)return;
+    g.globalAlpha=alpha;g.fillStyle=`hsla(${h},62%,${on?50:38}%,.95)`;g.beginPath();g.roundRect(x+1,2,Math.max(2,w-2),H-4,5);g.fill();
+    if(on||dash){g.strokeStyle=dash?'#78ffaa':'#fff';g.lineWidth=1.5;if(dash)g.setLineDash([5,3]);g.stroke();g.setLineDash([])}
+    g.save();g.beginPath();g.rect(x+4,0,Math.max(0,w-16),H);g.clip();g.fillStyle='#0b0d12';g.font='700 11px system-ui';g.fillText(label,Math.max(x+6,6),H/2+4);g.restore();
+    g.fillStyle='rgba(0,0,0,.35)';g.fillRect(x+w-7,6,3,H-12);g.globalAlpha=1};
+  for(const b of S.blocks||[]){
+    const on=b.id===selBlk,d=drag&&drag.b===b?drag:null,lbl=l=>`${b.name} · ${l/1920} bar${l===1920?'':'s'}`;
+    if(d&&d.mode==='blkmove'&&d.to!==b.s){box(b.s,b.l,b.h,false,.35,lbl(b.l));box(d.to,b.l,b.h,true,.9,(d.copy?'copy of ':'')+lbl(b.l),true);continue}
+    const L=d&&d.mode==='blkresize'?d.l:b.l;
+    box(b.s,L,b.h,on,1,lbl(L)+(L>b.loop?' ↻':''),d&&d.mode==='blkresize');
+    if(b.loop<L){g.fillStyle='rgba(0,0,0,.4)';for(let t=b.s+b.loop;t<b.s+L;t+=b.loop)g.fillRect(t*k-sx,4,2,H-8)}   // where the repeats start
+  }
+  if(drag&&drag.mode==='blknew')box(drag.a,Math.min(drag.t,total)-drag.a,nextBlkHue(),true,.6,'new section',true);
+  const ex=total*k-sx;if(ex<W){g.fillStyle='rgba(0,0,0,.55)';g.fillRect(ex,0,W-ex,H)}
+}
+const bPt=e=>{const r=blkCv.getBoundingClientRect(),x=e.clientX-r.left;return{x,t:(x+scroller.scrollLeft)/ppt()}};
+const blkAt=t=>(S.blocks||[]).find(b=>t>=b.s&&t<b.s+b.l);
+const blkEdge=()=>TOUCH?18:8;
+blkCv.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;e.preventDefault();focusArea='blocks';
+  const pt=bPt(e),b=blkAt(pt.t),k=ppt();
+  if(b){selBlk=b.id;secRange=null;
+    if(blkDoubleTap(b,e)){blkMenuOpen(b,e.clientX,e.clientY+10);return}   // double-tap / double-click: the menu
+    if(pt.x>(b.s+b.l)*k-scroller.scrollLeft-blkEdge()&&b.l*k>blkEdge()*2){drag={mode:'blkresize',b,l0:b.l,t0:pt.t,l:b.l};return}
+    drag={mode:'blkmove',b,t0:pt.t,to:b.s,copy:e.altKey};return}
+  selBlk=null;const a=Math.floor(pt.t/1920)*1920;if(a>=512*1920)return;drag={mode:'blknew',a,t:a+1920,x0:e.clientX,moved:false};
+});
+blkCv.addEventListener('contextmenu',e=>{e.preventDefault();const b=blkAt(bPt(e).t);if(b)blkMenuOpen(b,e.clientX,e.clientY)});
+blkCv.addEventListener('mousemove',e=>{if(drag)return;const pt=bPt(e),b=blkAt(pt.t);blkCv.style.cursor=!b?'cell':(pt.x>(b.s+b.l)*ppt()-scroller.scrollLeft-blkEdge()?'ew-resize':'grab')});
+window.addEventListener('mousemove',e=>{
+  if(!drag||!String(drag.mode).startsWith('blk'))return;e.stopImmediatePropagation();
+  const pt=bPt(e),b=drag.b;
+  if(drag.mode==='blkmove'){drag.copy=drag.copy||e.altKey;drag.to=clamp(Math.round((b.s+pt.t-drag.t0)/1920)*1920,0,512*1920-b.l);CLONEP=drag.to!==b.s?{A:b.s,B:b.s+b.l,D:drag.to,span:b.l,times:1}:null}
+  else if(drag.mode==='blkresize')drag.l=clamp(Math.round((drag.l0+pt.t-drag.t0)/1920)*1920,1920,512*1920-b.s);
+  else if(drag.mode==='blknew'){drag.moved=drag.moved||Math.abs(e.clientX-drag.x0)>6;drag.t=Math.max(drag.a+1920,Math.ceil(pt.t/1920)*1920)}
+},true);
+window.addEventListener('mouseup',e=>{
+  if(!drag||!String(drag.mode).startsWith('blk'))return;e.stopImmediatePropagation();
+  const d=drag;drag=null;CLONEP=null;
+  if(d.mode==='blkmove'){if(d.to!==d.b.s)(d.copy?blkCopyTo:blkMove)(d.b,d.to)}
+  else if(d.mode==='blkresize'){if(d.l!==d.b.l)blkResize(d.b,d.l)}
+  else if(d.mode==='blknew'&&!d.moved){setPasteSpot(d.a);status(`Bar ${d.a/1920+1} picked — Ctrl+V pastes a copied section there. Drag along the strip to make a new section.`)}
+  else if(d.mode==='blknew'){const e2=Math.min(d.t,totalTicks());if(e2>d.a){pushUndo();const b={id:nextId++,s:d.a,l:e2-d.a,loop:e2-d.a,name:nextBlkName(),h:nextBlkHue()};blkPlace(b);selBlk=b.id;changed(true);status(`Made section ${b.name} over ${barTxt(b.s,b.l)}.`)}}
+},true);
+
+/* ============================ import MIDI ============================ */
+function parseMidi(buf){
+  const d=new DataView(buf);let p=0;
+  const str=n=>{let t='';for(let i=0;i<n;i++)t+=String.fromCharCode(d.getUint8(p+i));p+=n;return t};
+  const u32=()=>{const v=d.getUint32(p);p+=4;return v},u16=()=>{const v=d.getUint16(p);p+=2;return v};
+  if(d.byteLength<14||str(4)!=='MThd')throw 'it isn’t a MIDI file';
+  const hl=u32(),fmt=u16(),ntr=u16(),div=u16();p=8+hl;
+  if(div&0x8000)throw 'SMPTE-timed MIDI files aren’t supported';
+  const tracks=[];let tempo=null;
+  for(let ti=0;ti<ntr&&p+8<=d.byteLength;ti++){
+    const id=str(4),len=u32(),end=Math.min(d.byteLength,p+len);if(id!=='MTrk'){p=end;continue}
+    let t=0,rs=0,name='';const notes=[],open=new Map();
+    const vlq=()=>{let v=0,b;do{b=d.getUint8(p++);v=v*128+(b&0x7f)}while(b&0x80&&p<end);return v};
+    while(p<end){
+      t+=vlq();if(p>=end)break;let st=d.getUint8(p);
+      if(st<0x80){if(!rs)break;st=rs}else{p++;if(st<0xF0)rs=st}
+      if(st===0xFF){const ty=d.getUint8(p++),ln=vlq();
+        if(ty===0x51&&ln===3&&tempo==null)tempo=60000000/((d.getUint8(p)<<16)|(d.getUint8(p+1)<<8)|d.getUint8(p+2));
+        if(ty===0x03){let nm='';for(let i=0;i<ln;i++)nm+=String.fromCharCode(d.getUint8(p+i));name=nm}
+        p+=ln;continue}
+      if(st===0xF0||st===0xF7){p+=vlq();continue}
+      const hi=st&0xF0,ch=st&0x0F,a=d.getUint8(p++),b=(hi===0xC0||hi===0xD0)?0:d.getUint8(p++);
+      if(hi===0x90&&b>0){const key=ch*128+a;if(!open.has(key))open.set(key,[]);open.get(key).push({t,v:b})}
+      else if(hi===0x80||(hi===0x90&&b===0)){const q=open.get(ch*128+a);if(q&&q.length){const on=q.shift();notes.push({ch,p:a,s:on.t,l:Math.max(1,t-on.t),v:on.v})}}
+    }
+    for(const [key,q] of open)for(const on of q)notes.push({ch:key>>7,p:key&127,s:on.t,l:Math.max(1,t-on.t),v:on.v});   // never switched off: end them with the track
+    tracks.push({name,notes});p=end;
+  }
+  return{fmt,div,tempo,tracks};
+}
+async function importMidi(file){
+  let m;try{m=parseMidi(await file.arrayBuffer())}catch(e){status(`Couldn’t read ${file.name}: ${e}`);return false}
+  let tracks=m.tracks.filter(t=>t.notes.length);
+  const ch=tracks.find(t=>/chords/i.test(t.name));if(ch&&tracks.some(t=>/arpeggio/i.test(t.name)))tracks=[ch];   // one of our own exports: take the chords, not the arpeggio they made
+  let notes=tracks.flatMap(t=>t.notes);const pitched=notes.filter(n=>n.ch!==9);if(pitched.length)notes=pitched;   // leave out drums (channel 10)
+  if(!notes.length){status(`${file.name} has no notes in it.`);return false}
+  const rep=$('midiReplace').checked,k=480/m.div,LIM=512*1920;
+  pushUndo();
+  const at=rep?0:Math.ceil(S.notes.reduce((a,n)=>Math.max(a,n.s+n.l),0)/1920)*1920;
+  let conv=notes.map(n=>{let q=n.p;while(q<LO)q+=12;while(q>HI)q-=12;return{id:nextId++,p:q,s:at+Math.round(n.s*k),l:Math.max(10,Math.round(n.l*k)),v:clamp(n.v,1,127)}}).filter(n=>n.s<LIM);
+  const cut=conv.length<notes.length;conv.forEach(n=>{if(n.s+n.l>LIM)n.l=LIM-n.s});
+  const seen=new Set();conv=conv.filter(n=>{const key=n.p+':'+n.s;if(seen.has(key))return false;seen.add(key);return true});
+  const end=Math.max(...conv.map(n=>n.s+n.l));
+  if(rep){S.notes=[];S.blocks=[];selBlk=null}
+  S.notes.push(...conv);sel.clear();
+  S.bars=clamp(Math.max(rep?1:S.bars,Math.ceil(end/1920)),1,512);$('bars').value=S.bars;fixProfile();
+  if($('midiTempo').checked&&m.tempo){S.bpm=clamp(Math.round(m.tempo),30,300);$('bpm').value=S.bpm}
+  const bE=Math.min(S.bars*1920,Math.ceil(end/1920)*1920);
+  if(bE>at){const b={id:nextId++,s:at,l:bE-at,loop:bE-at,name:file.name.replace(/\.[^.]+$/,'').slice(0,20)||nextBlkName(),h:nextBlkHue()};blkPlace(b)}
+  layout();changed(true);
+  status(`Imported ${file.name}: ${conv.length} notes${tracks.length>1?` from ${tracks.length} tracks`:''}, ${Math.ceil((end-at)/1920)} bars${$('midiTempo').checked&&m.tempo?` at ${S.bpm} BPM`:''}${cut?' (cut at bar 512)':''}${rep?'':` — added from bar ${at/1920+1}`}. Tip: the “Poly” pattern plays it exactly as written.`);
+  return true;
+}
+$('bImportMidi').onclick=()=>$('midiFileIn').click();
+$('midiFileIn').onchange=async()=>{const f=$('midiFileIn').files[0];if(f)await importMidi(f);$('midiFileIn').value=''};
+
+
+/* ---------- the section block menu ---------- */
+let blkTap={t:0,id:null,x:0};
+function blkDoubleTap(b,e){const now=performance.now(),hit=blkTap.id===b.id&&now-blkTap.t<400&&Math.abs(e.clientX-blkTap.x)<24;blkTap=hit?{t:0,id:null,x:0}:{t:now,id:b.id,x:e.clientX};return hit}
+function blkMenuOpen(bk,x,y){
+  drag=null;CLONEP=null;selBlk=bk.id;focusArea='blocks';
+  const m=$('blkMenu');m.dataset.id=bk.id;
+  $('bmHead').textContent=`Section ${bk.name} · ${barTxt(bk.s,bk.l)} (${bk.l/1920} bar${bk.l===1920?'':'s'})`;
+  $('bmMove').value=bk.s/1920+1;$('bmLen').value=bk.l/1920;$('bmCopyTo').value=(bk.s+bk.l)/1920+1;
+  m.hidden=false;const r=m.getBoundingClientRect();
+  m.style.left=clamp(x-20,8,innerWidth-r.width-8)+'px';m.style.top=clamp(y,8,innerHeight-r.height-8)+'px';
+}
+function blkMenuClose(){$('blkMenu').hidden=true}
+(function(){
+  const m=$('blkMenu'),mb=()=>(S.blocks||[]).find(b=>b.id===+m.dataset.id),bar=id=>(clamp(Math.round(+$(id).value)||1,1,512)-1)*1920;
+  const act=f=>()=>{const b=mb();blkMenuClose();if(b)f(b)};
+  $('bmMoveGo').onclick=act(b=>blkMove(b,bar('bmMove')));
+  $('bmLenGo').onclick=act(b=>blkResize(b,clamp(Math.round(+$('bmLen').value)||1,1,512)*1920));
+  $('bmCopyGo').onclick=act(b=>blkCopyTo(b,bar('bmCopyTo')));
+  $('bmDup').onclick=act(b=>blkDup(b));
+  $('bmRename').onclick=act(b=>{const n=prompt('Name this section',b.name);if(n&&n.trim()){pushUndo();b.name=n.trim().slice(0,24);changed(true)}});
+  $('bmDel').onclick=act(b=>blkDelete(b));
+  for(const [i,btn] of [['bmMove','bmMoveGo'],['bmLen','bmLenGo'],['bmCopyTo','bmCopyGo']])$(i).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$(btn).click()}});
+  document.addEventListener('pointerdown',e=>{if(!m.hidden&&!e.target.closest('#blkMenu'))blkMenuClose()},true);   // tap outside: close
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!m.hidden){blkMenuClose();e.preventDefault();e.stopImmediatePropagation()}},true);
+})();
+
+
+/* ---------- copy / cut / paste: section blocks and chord boxes ---------- */
+function blkCopy(bk){
+  const sn=rangeSnap(bk.s,bk.s+bk.l);
+  CLIP={type:'section',span:bk.l,notes:sn.notes,segs:sn.segs,blk:{name:bk.name,h:bk.h,loop:bk.loop||bk.l}};
+  status(`Copied section ${bk.name} — click an empty spot on SECTIONS (or leave it: it goes after the music), then Ctrl+V.`);return true;
+}
+let chClip=null;
+function chCopyTok(){
+  const it=chParsed.items[chSel];if(!it){status('Click a chord box first to select it.');return false}
+  const toks=$('chText').value.match(/[^\s|]+/g)||[];chClip=toks[it.tok];
+  status(`Copied chord ${chClip} — Ctrl+V pastes it after the selected chord box.`);return true;
+}
+function chPasteTok(){
+  if(!chClip){status('Copy a chord box first (select it, then Ctrl+C).');return}
+  const txt=$('chText').value,bars=txt.includes('|'),it=chParsed.items[chSel];let pos=txt.length;
+  if(it){const re=/[^\s|]+/g;let m,n=-1;while((m=re.exec(txt))){if(++n===it.tok)break}
+    if(m){const end=m.index+m[0].length;if(bars){const r=txt.indexOf('|',end);pos=r<0?txt.length:r+1}else pos=end}}
+  const k=(txt.slice(0,pos).match(/[^\s|]+/g)||[]).length;   // the pasted box's position
+  let out=bars?(pos>=txt.length?txt.replace(/\s*\|?\s*$/,'')+' | '+chClip+' |':txt.slice(0,pos)+' '+chClip+' |'+txt.slice(pos)):txt.slice(0,pos)+' '+chClip+' '+txt.slice(pos);
+  out=out.replace(/[ \t]{2,}/g,' ').trim();
+  chSel=k;chText(out);status(`Pasted ${chClip}${bars?' as its own bar':''}.`);
+}
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
 const JB=window.__JUCE__&&window.__JUCE__.backend;
