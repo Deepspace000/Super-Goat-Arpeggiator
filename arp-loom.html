@@ -1622,7 +1622,7 @@ function drawRuler(){
     if(drag&&drag.mode==='secmove'&&drag.dt){const d=drag.dt*k;g.setLineDash([4,3]);g.strokeStyle='#fff';g.strokeRect(a+d+.5,.5,b-a,49);g.setLineDash([])}}
   if(laneDrag&&laneDrag.mode==='range'){const a=Math.min(laneDrag.a,laneDrag.b)*k-sx,b=Math.max(laneDrag.a,laneDrag.b)*k-sx;
     g.fillStyle='rgba(255,184,107,.15)';g.fillRect(a,20,b-a,30);g.strokeStyle='#ffb86b';g.setLineDash([4,3]);g.strokeRect(a+.5,21.5,b-a,27);g.setLineDash([])}
-  if(CLIP){const kind=CLIP.type==='segs'?'segs':CLIP.type,grid=kind==='segs'||kind==='section'?(CLIP.blk?1920:TPQ):snapT(),px=pasteTarget(kind,grid)*k-sx;
+  if(CLIP){const kind=CLIP.type==='segs'?'segs':CLIP.type,grid=kind==='segs'||kind==='section'?((CLIP.blk||CLIP.parts)?1920:TPQ):snapT(),px=pasteTarget(kind,grid)*k-sx;
     if(px>=-40&&px<=W){g.fillStyle='#4fe3ff';g.beginPath();g.moveTo(px-5,11);g.lineTo(px+5,11);g.lineTo(px,19);g.fill();g.fillRect(px,19,1,31);
       g.font='600 9px system-ui';g.fillText('paste',px+6,10)}}
   for(const c of cloneRanges()){const x0=c.a*k-sx,x1=c.b*k-sx;if(x1<0||x0>W)continue;g.fillStyle=c.src?'rgba(255,184,107,.55)':'rgba(120,255,170,.5)';g.fillRect(x0,0,x1-x0,20);
@@ -2197,8 +2197,11 @@ function secCopy(){
 }
 function secClear(a,b){S.notes=S.notes.filter(n=>n.s<a||n.s>=b);const tmp={id:-1,s:a,l:b-a};S.segs.push(tmp);resolveOverlaps(tmp);S.segs=S.segs.filter(g=>g!==tmp)}
 function secPaste(at,noUndo){
-  if(!noUndo)pushUndo();at=at??takePasteAt('section',CLIP.blk?1920:TPQ);const span=CLIP.span;
+  if(!noUndo)pushUndo();at=at??takePasteAt('section',(CLIP.blk||CLIP.parts)?1920:TPQ);const span=CLIP.span;
   if(at+span>totalTicks()){S.bars=clamp(Math.ceil((at+span)/1920),1,512);$('bars').value=S.bars;fixProfile();layout()}
+  if(CLIP.parts){selBlks=new Set();   // several sections: each goes back at its own distance from the first
+    for(const pt of CLIP.parts){const a2=at+pt.r;rangeClear(a2,a2+pt.l);rangePut(pt.sn,a2);const nb={id:nextId++,s:a2,l:pt.l,loop:Math.min(pt.blk.loop,pt.l),name:pt.blk.name,h:pt.blk.h};blkPlace(nb);selBlks.add(nb.id);selBlk=nb.id}
+    focusArea='blocks';secRange=null;changed(true);status(`Pasted ${CLIP.parts.length} sections from bar ${at/1920+1}.`);return}
   const total=totalTicks();rangeClear(at,at+span);sel.clear();
   for(const it of CLIP.notes){const s0=at+it.r;if(s0>=total)continue;const n={id:nextId++,p:it.p,s:s0,l:Math.min(it.l,total-s0),v:it.v};S.notes.push(n);sel.add(n)}
   for(const it of CLIP.segs){const s0=at+it.r;if(s0>=total)continue;const g={id:nextId++,s:s0,l:Math.min(it.l,total-s0),pat:it.pat,rate:it.rate,oct:it.oct};S.segs.push(g);resolveOverlaps(g)}
@@ -2215,7 +2218,9 @@ let secSig='';
 function renderSecBar(){
   if(selBlk!=null&&focusArea!=='blocks')selBlk=null;   // touching anything else lets go of the block
   const bk=selBlk!=null?(S.blocks||[]).find(x=>x.id===selBlk):null;
-  if(bk){const bs='blk:'+bk.id+':'+bk.s+':'+bk.l+':'+bk.name;if(bs!==secSig){secSig=bs;renderBlkBar(bk)}return}
+  if(bk){const grp=blkGroup();
+    if(grp.length>1){const bs='grp:'+grp.map(x=>x.id+'@'+x.s+'+'+x.l).join(',')+':'+blkMulti;if(bs!==secSig){secSig=bs;renderGroupBar(grp)}return}
+    const bs='blk:'+bk.id+':'+bk.s+':'+bk.l+':'+bk.name+':'+blkMulti;if(bs!==secSig){secSig=bs;renderBlkBar(bk)}return}
   if(selBlk!=null)selBlk=null;
   const sig=secRange?secRange.a+'-'+secRange.b+(CLIP?CLIP.type:''):(CLIP&&CLIP.type==='section'?'clip':'');if(sig===secSig)return;secSig=sig;
   const bar=$('secBar');bar.innerHTML='';
@@ -2255,8 +2260,14 @@ function resolveOverlaps(a){
 window.addEventListener('keydown',e=>{
   const tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='select'||tag==='textarea')return;
   const ctrl=e.ctrlKey||e.metaKey;
-  if(focusArea==='blocks'&&selBlk!=null){const bk=(S.blocks||[]).find(x=>x.id===selBlk);
-    if(bk){if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();blkDelete(bk);return}
+  if(focusArea==='blocks'&&selBlk!=null){const bk=(S.blocks||[]).find(x=>x.id===selBlk),grp=blkGroup();
+    if(grp.length>1){const k2=e.key.toLowerCase();   // several sections selected
+      if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();blkGroupDelete(grp);return}
+      if(ctrl&&k2==='d'){e.preventDefault();blkGroupMove(grp,grpSpan(grp),true);return}
+      if(ctrl&&k2==='c'){e.preventDefault();blkGroupCopy(grp);return}
+      if(ctrl&&k2==='x'){e.preventDefault();blkGroupCopy(grp);blkGroupDelete(grp);return}
+      if(e.key==='Escape'){selBlk=null;return}}
+    else if(bk){if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();blkDelete(bk);return}
       if(ctrl&&e.key.toLowerCase()==='d'){e.preventDefault();blkDup(bk);return}
       if(ctrl&&e.key.toLowerCase()==='c'){e.preventDefault();blkCopy(bk);return}
       if(ctrl&&e.key.toLowerCase()==='x'){e.preventDefault();blkCopy(bk);blkDelete(bk);status(`Cut section ${bk.name} — Ctrl+V pastes it.`);return}
@@ -3769,7 +3780,7 @@ function drawSheet(){
     for(let t=t0;t<=t0+L.span;t+=TPQ){const bar=t%1920===0;if(!bar&&beatPx<6)continue;g.fillStyle=bar?'#3a4560':'#1b2130';g.fillRect(Math.round(xs(t)),ry,1,sh)}
     // head strip: bar numbers + chord names (tap it to move the playhead)
     g.fillStyle='#10131a';g.fillRect(L.ML,top,IW,L.HEAD);
-    if(L.HEAD>24)for(const bk of S.blocks){const a=Math.max(bk.s,t0),b=Math.min(bk.s+bk.l,t1);if(b<=a)continue;const on=bk.id===selBlk;
+    if(L.HEAD>24)for(const bk of S.blocks){const a=Math.max(bk.s,t0),b=Math.min(bk.s+bk.l,t1);if(b<=a)continue;const on=blkSel().has(bk.id);
       g.fillStyle=`hsla(${bk.h},62%,${on?52:40}%,.95)`;g.fillRect(xs(a)+1,top+1,(b-a)*L.k-2,11);if(on){g.strokeStyle='#fff';g.lineWidth=1;g.strokeRect(xs(a)+1.5,top+1.5,(b-a)*L.k-3,10)}
       g.save();g.beginPath();g.rect(xs(a)+2,top,Math.max(0,(b-a)*L.k-4),12);g.clip();g.fillStyle='#0b0d12';g.font='700 9px system-ui';g.fillText((bk.s<t0?'… ':'')+bk.name,xs(a)+4,top+10);g.restore()}
     for(let b=0;b<L.bps;b++){const t=t0+b*1920;if(t>=t1)break;const x=xs(t);g.fillStyle='#39425a';g.fillRect(x,top,1,L.HEAD);g.fillStyle='#8490a8';g.font='9px system-ui';g.fillText(String(t/1920+1),x+3,top+9+L.HEAD-24)}
@@ -3806,7 +3817,9 @@ function drawSheet(){
 sheetCv.addEventListener('mousedown',e=>{
   const L=SHL||sheetGeom(),pt=sheetPt(e);
   if(pt.margin)return;
-  if(pt.head&&L.HEAD>24&&pt.yIn<13){const bk=S.blocks.find(b=>pt.t>=b.s&&pt.t<b.s+b.l);selBlk=bk?bk.id:null;focusArea='blocks';
+  if(pt.head&&L.HEAD>24&&pt.yIn<13){const bk=S.blocks.find(b=>pt.t>=b.s&&pt.t<b.s+b.l);
+    if(bk&&(e.shiftKey||e.ctrlKey||e.metaKey||blkMulti)){blkToggle(bk);return}
+    selBlk=bk?bk.id:null;focusArea='blocks';
     if(bk&&(e.button===2||blkDoubleTap(bk,e)))blkMenuOpen(bk,e.clientX,e.clientY+10);return}   // the block band: pick a section (double-tap / right-click: its menu)
   if(pt.head){focusArea='ruler';seek(Math.round(pt.t/TPQ)*TPQ);return}   // the strip above a system moves the playhead
   if(pt.p<L.lo||pt.p>L.hi)return;
@@ -4137,8 +4150,9 @@ function renderBlkBar(bk){
   inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go.click()}};
   bar.append(el('span','legend','Move to bar'),inp,go);
   btn('🗑 Delete',()=>blkDelete(bk),'Delete — removes the section and its notes').classList.add('danger');
-  btn('✕',()=>{selBlk=null},'Deselect (Esc)');
-  bar.append(el('span','legend','Drag to move · drag the right edge to repeat or shorten · Alt-drag copies'));
+  const mb=btn(blkMulti?'⊕ Tap more sections…':'⊕ Select more',()=>{blkMulti=!blkMulti},'Pick several sections (Shift-click on a computer)');if(blkMulti)mb.classList.add('on');
+  btn('✕',()=>{selBlk=null;blkMulti=false},'Deselect (Esc)');
+  bar.append(el('span','legend','Drag to move · drag the right edge to repeat or shorten · Alt-drag copies · Shift-click selects several'));
 }
 function drawBlocks(){
   const g=bkx,W=blkCv.width/DPR,H=blkCv.height/DPR,sx=scroller.scrollLeft,k=ppt(),total=totalTicks();
@@ -4148,8 +4162,10 @@ function drawBlocks(){
     if(on||dash){g.strokeStyle=dash?'#78ffaa':'#fff';g.lineWidth=1.5;if(dash)g.setLineDash([5,3]);g.stroke();g.setLineDash([])}
     g.save();g.beginPath();g.rect(x+4,0,Math.max(0,w-16),H);g.clip();g.fillStyle='#0b0d12';g.font='700 11px system-ui';g.fillText(label,Math.max(x+6,6),H/2+4);g.restore();
     g.fillStyle='rgba(0,0,0,.35)';g.fillRect(x+w-7,6,3,H-12);g.globalAlpha=1};
+  const SEL=blkSel();
   for(const b of S.blocks||[]){
-    const on=b.id===selBlk,d=drag&&drag.b===b?drag:null,lbl=l=>`${b.name} · ${l/1920} bar${l===1920?'':'s'}`;
+    const on=SEL.has(b.id),gd=drag&&drag.mode==='blkmove'&&drag.group&&drag.group.includes(b)?drag.to-drag.b.s:0,d=drag&&drag.b===b&&!drag.group?drag:null,lbl=l=>`${b.name} · ${l/1920} bar${l===1920?'':'s'}`;
+    if(gd){box(b.s,b.l,b.h,false,.35,lbl(b.l));box(b.s+gd,b.l,b.h,true,.9,(drag.copy?'copy of ':'')+lbl(b.l),true);continue}
     if(d&&d.mode==='blkmove'&&d.to!==b.s){box(b.s,b.l,b.h,false,.35,lbl(b.l));box(d.to,b.l,b.h,true,.9,(d.copy?'copy of ':'')+lbl(b.l),true);continue}
     const L=d&&d.mode==='blkresize'?d.l:b.l;
     box(b.s,L,b.h,on,1,lbl(L)+(L>b.loop?' ↻':''),d&&d.mode==='blkresize');
@@ -4164,10 +4180,12 @@ const blkEdge=()=>TOUCH?18:8;
 blkCv.addEventListener('mousedown',e=>{
   if(e.button!==0)return;e.preventDefault();focusArea='blocks';
   const pt=bPt(e),b=blkAt(pt.t),k=ppt();
-  if(b){selBlk=b.id;secRange=null;
+  if(b){secRange=null;
+    if(e.shiftKey||e.ctrlKey||e.metaKey||blkMulti){blkToggle(b);return}   // Shift/Ctrl-click (or “Select more” on a touch screen): add it or take it out
+    const grp=blkSel().has(b.id)&&blkSel().size>1;selBlk=b.id;   // pressing one of several selected: they move together
     if(blkDoubleTap(b,e)){blkMenuOpen(b,e.clientX,e.clientY+10);return}   // double-tap / double-click: the menu
-    if(pt.x>(b.s+b.l)*k-scroller.scrollLeft-blkEdge()&&b.l*k>blkEdge()*2){drag={mode:'blkresize',b,l0:b.l,t0:pt.t,l:b.l};return}
-    drag={mode:'blkmove',b,t0:pt.t,to:b.s,copy:e.altKey};return}
+    if(!grp&&pt.x>(b.s+b.l)*k-scroller.scrollLeft-blkEdge()&&b.l*k>blkEdge()*2){drag={mode:'blkresize',b,l0:b.l,t0:pt.t,l:b.l};return}
+    drag={mode:'blkmove',b,t0:pt.t,to:b.s,copy:e.altKey,group:grp?blkGroup():null};return}
   selBlk=null;const a=Math.floor(pt.t/1920)*1920;if(a>=512*1920)return;drag={mode:'blknew',a,t:a+1920,x0:e.clientX,moved:false};
 });
 blkCv.addEventListener('contextmenu',e=>{e.preventDefault();const b=blkAt(bPt(e).t);if(b)blkMenuOpen(b,e.clientX,e.clientY)});
@@ -4175,14 +4193,19 @@ blkCv.addEventListener('mousemove',e=>{if(drag)return;const pt=bPt(e),b=blkAt(pt
 window.addEventListener('mousemove',e=>{
   if(!drag||!String(drag.mode).startsWith('blk'))return;e.stopImmediatePropagation();
   const pt=bPt(e),b=drag.b;
-  if(drag.mode==='blkmove'){drag.copy=drag.copy||e.altKey;drag.to=clamp(Math.round((b.s+pt.t-drag.t0)/1920)*1920,0,512*1920-b.l);CLONEP=drag.to!==b.s?{A:b.s,B:b.s+b.l,D:drag.to,span:b.l,times:1}:null}
+  if(drag.mode==='blkmove'){drag.copy=drag.copy||e.altKey;
+    if(drag.group){const g=drag.group,minS=Math.min(...g.map(x=>x.s)),maxE=Math.max(...g.map(x=>x.s+x.l)),dl=clamp(Math.round((pt.t-drag.t0)/1920)*1920,-minS,512*1920-maxE);
+      drag.to=b.s+dl;CLONEP=dl?{A:minS,B:maxE,D:minS+dl,span:maxE-minS,times:1}:null}
+    else{drag.to=clamp(Math.round((b.s+pt.t-drag.t0)/1920)*1920,0,512*1920-b.l);CLONEP=drag.to!==b.s?{A:b.s,B:b.s+b.l,D:drag.to,span:b.l,times:1}:null}}
   else if(drag.mode==='blkresize')drag.l=clamp(Math.round((drag.l0+pt.t-drag.t0)/1920)*1920,1920,512*1920-b.s);
   else if(drag.mode==='blknew'){drag.moved=drag.moved||Math.abs(e.clientX-drag.x0)>6;drag.t=Math.max(drag.a+1920,Math.ceil(pt.t/1920)*1920)}
 },true);
 window.addEventListener('mouseup',e=>{
   if(!drag||!String(drag.mode).startsWith('blk'))return;e.stopImmediatePropagation();
   const d=drag;drag=null;CLONEP=null;
-  if(d.mode==='blkmove'){if(d.to!==d.b.s)(d.copy?blkCopyTo:blkMove)(d.b,d.to)}
+  if(d.mode==='blkmove'){
+    if(d.group){if(d.to!==d.b.s)blkGroupMove(d.group,d.to-d.b.s,d.copy);else{selBlks=new Set([d.b.id]);selBlk=d.b.id}}   // a plain click on one of them selects just that one
+    else if(d.to!==d.b.s)(d.copy?blkCopyTo:blkMove)(d.b,d.to)}
   else if(d.mode==='blkresize'){if(d.l!==d.b.l)blkResize(d.b,d.l)}
   else if(d.mode==='blknew'&&!d.moved){setPasteSpot(d.a);status(`Bar ${d.a/1920+1} picked — Ctrl+V pastes a copied section there. Drag along the strip to make a new section.`)}
   else if(d.mode==='blknew'){const e2=Math.min(d.t,totalTicks());if(e2>d.a){pushUndo();const b={id:nextId++,s:d.a,l:e2-d.a,loop:e2-d.a,name:nextBlkName(),h:nextBlkHue()};blkPlace(b);selBlk=b.id;changed(true);status(`Made section ${b.name} over ${barTxt(b.s,b.l)}.`)}}
@@ -4401,6 +4424,50 @@ function pieceCardFill(){
     if(e.key==='Escape'&&!card.hidden){close();e.preventDefault();e.stopImmediatePropagation()}},true);
   setInterval(pieceUI,800);setTimeout(pieceUI,0);
 })();
+
+
+/* ---------- several section blocks at once (Shift-click, or "Select more" on a touch screen) ---------- */
+var selBlks=new Set(),blkMulti=false;
+// the selected blocks; selBlk is always one of them (setting selBlk to another block starts a fresh selection)
+function blkSel(){const ids=new Set((S.blocks||[]).map(b=>b.id));for(const id of [...selBlks])if(!ids.has(id))selBlks.delete(id);
+  if(selBlk==null||!ids.has(selBlk)){selBlk=null;selBlks.clear();blkMulti=false;return selBlks}
+  if(!selBlks.has(selBlk)){selBlks.clear();selBlks.add(selBlk)}return selBlks}
+const blkGroup=()=>{const s=blkSel();return(S.blocks||[]).filter(b=>s.has(b.id)).sort((a,b)=>a.s-b.s)};
+const grpSpan=g=>Math.max(...g.map(b=>b.s+b.l))-Math.min(...g.map(b=>b.s));
+function blkToggle(b){const s=blkSel();if(s.has(b.id)){s.delete(b.id);selBlk=s.size?[...s][s.size-1]:null}else{s.add(b.id);selBlk=b.id}focusArea='blocks';secRange=null}
+// move (or copy) the group by delta, keeping the gaps between them
+function blkGroupMove(g,delta,copy){
+  const minS=Math.min(...g.map(b=>b.s)),maxE=Math.max(...g.map(b=>b.s+b.l));
+  delta=clamp(Math.round(delta/1920)*1920,-minS,512*1920-maxE);if(!delta)return;
+  pushUndo();growTo(maxE+delta);
+  const parts=g.map(b=>({b,sn:rangeSnap(b.s,b.s+b.l)}));   // take them all first: they may land on each other's old bars
+  if(!copy)for(const pt of parts)rangeClear(pt.b.s,pt.b.s+pt.b.l);
+  for(const pt of parts)rangeClear(pt.b.s+delta,pt.b.s+pt.b.l+delta);
+  const out=[];
+  for(const pt of parts){rangePut(pt.sn,pt.b.s+delta);if(copy)out.push(Object.assign({},pt.b,{id:nextId++,s:pt.b.s+delta}));else{pt.b.s+=delta;out.push(pt.b)}}
+  for(const b of out)blkPlace(b);
+  selBlks=new Set(out.map(b=>b.id));selBlk=out[out.length-1].id;focusArea='blocks';changed(true);
+  status(`${copy?'Copied':'Moved'} ${g.length} sections to ${barTxt(minS+delta,maxE-minS)}.`);
+}
+function blkGroupDelete(g){pushUndo();for(const b of g)rangeClear(b.s,b.s+b.l);S.blocks=S.blocks.filter(x=>!g.includes(x));selBlk=null;changed(true);status(`Deleted ${g.length} sections and their notes.`)}
+function blkGroupCopy(g){const minS=Math.min(...g.map(b=>b.s));
+  CLIP={type:'section',span:grpSpan(g),notes:[],segs:[],parts:g.map(b=>({r:b.s-minS,l:b.l,sn:rangeSnap(b.s,b.s+b.l),blk:{name:b.name,h:b.h,loop:b.loop||b.l}}))};
+  status(`Copied ${g.length} sections — click an empty spot on SECTIONS (or leave it: they go after the music), then Ctrl+V.`);return true}
+function renderGroupBar(g){
+  const bar=$('secBar');bar.innerHTML='';bar.classList.add('show');
+  const minS=Math.min(...g.map(b=>b.s)),span=grpSpan(g);
+  bar.append(el('b',null,`${g.length} sections (${g.map(b=>b.name).join(', ')}) · ${barTxt(minS,span)}`));
+  const btn=(t,f,title)=>{const b=el('button',null,t);b.title=title||'';b.onclick=()=>{focusArea='blocks';f()};bar.append(b);return b};
+  btn('⧺ Duplicate',()=>blkGroupMove(g,span,true),'Ctrl+D — copies them all straight after the last one');
+  const inp=el('input');inp.type='number';inp.min=1;inp.max=512;inp.inputMode='numeric';inp.value=minS/1920+1;inp.style.width='64px';inp.title='Bar the first one moves to';
+  const go=el('button',null,'Move');go.onclick=()=>{focusArea='blocks';blkGroupMove(g,(clamp(Math.round(+inp.value)||1,1,512)-1)*1920-minS,false)};
+  inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go.click()}};
+  bar.append(el('span','legend','Move to bar'),inp,go);
+  btn('🗑 Delete',()=>blkGroupDelete(g),'Delete — removes them and their notes').classList.add('danger');
+  const mb=btn(blkMulti?'⊕ Tap more sections…':'⊕ Select more',()=>{blkMulti=!blkMulti},'Pick more sections (Shift-click on a computer)');if(blkMulti)mb.classList.add('on');
+  btn('✕',()=>{selBlk=null;blkMulti=false},'Deselect (Esc)');
+  bar.append(el('span','legend','Drag any of them to move them together · Shift-click adds or removes one · Ctrl+C / X / V'));
+}
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
 const JB=window.__JUCE__&&window.__JUCE__.backend;
