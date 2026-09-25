@@ -955,7 +955,7 @@ function defaultState(){
     ],
     synth:presetSynth('Glass Arp'),preset:'Glass Arp',
     view:{zoom:18,snap:0,chord:'single',snapV:2},
-    chordSeq:{text:'Am9 | Fmaj7#11 | C6/9/E | G13sus4 G7b9',unit:1920,start:1,oct:3,voicing:'smooth',inv:0,hear:'arp',libRoot:'C',libMode:'major',libOpen:'In key',libCtx:false,libCtxV:2,bass:false,replace:true}
+    chordSeq:{text:'Am9 | Fmaj7#11 | C6/9/E | G13sus4 G7b9',unit:1920,start:1,oct:3,voicing:'smooth',inv:0,hear:'arp',libRoot:'C',libMode:'major',libOpen:['In key'],libCtx:false,libCtxV:2,bass:false,replace:true}
   };
   nextId=1;
   const prog=[[57,60,64,67],[53,57,60,64],[48,55,60,64],[55,59,62,65]];
@@ -3234,6 +3234,8 @@ function libAudition(sym,el0){
   if(CS().libCtx&&last){items.push({...last,dur:1920});const chips=[...document.querySelectorAll('#chList .chChip')];hl.push(chips[chParsed.items.lastIndexOf(last)]||null)}
   items.push(it);hl.push(el0);chPlay(items,hl);
 }
+// the chord library's open groups (older songs kept just one name)
+const libOpenList=c=>Array.isArray(c.libOpen)?c.libOpen:(c.libOpen?[c.libOpen]:[]);
 function renderLib(){
   const c=CS(),box=$('libCats');box.innerHTML='';
   const r=c.libRoot,cats=[['In key',null]].concat(LIB_CATS);
@@ -3246,10 +3248,10 @@ function renderLib(){
     return d;
   };
   for(const[name,sfx]of cats){
-    const open=c.libOpen===name,h=el('div','sgHead'+(open?' open':''));
+    const open=libOpenList(c).includes(name),h=el('div','sgHead'+(open?' open':''));
     const label=name==='In key'?`In key — ${r} ${LIB_MODES.find(m=>m[0]===c.libMode)[1]}`:name==='Polychords'?'Polychords':`${name}`;
     h.append(el('span','ar',open?'▾':'▸'),el('span','nm',label));
-    h.onclick=()=>{c.libOpen=open?'':name;renderLib();saveSoon()};box.append(h);
+    h.onclick=()=>{const L=libOpenList(c);c.libOpen=open?L.filter(x=>x!==name):[...L,name];renderLib();saveSoon()};box.append(h);   // groups open and close on their own; any number can be open
     if(!open)continue;
     const body=el('div','libBody');
     if(name==='In key'){const d=diatonic(r,c.libMode);
@@ -3263,7 +3265,7 @@ function renderLib(){
 (function(){
   LIB_ROOTS.forEach(n=>$('libRoot').add(new Option(n,n)));LIB_MODES.forEach(([v,n])=>$('libMode').add(new Option(n,v)));
   $('libRoot').onchange=()=>{CS().libRoot=$('libRoot').value;renderLib();saveSoon()};
-  $('libMode').onchange=()=>{CS().libMode=$('libMode').value;CS().libOpen='In key';renderLib();saveSoon()};
+  $('libMode').onchange=()=>{CS().libMode=$('libMode').value;const L=libOpenList(CS());if(!L.includes('In key'))CS().libOpen=[...L,'In key'];renderLib();saveSoon()};
   $('libCtx').onchange=()=>{CS().libCtx=$('libCtx').checked;saveSoon()};
   // drops: into the text box the browser inserts at the caret; onto the chord boxes = append
   const ta=$('chText'),list=$('chList');
