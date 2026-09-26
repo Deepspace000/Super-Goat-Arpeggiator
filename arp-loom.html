@@ -802,7 +802,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
     <div class="bar"><button id="bWav">⤓ Export WAV (24-bit / 48 kHz)</button><button id="bMidi">⤓ Export MIDI</button></div>
     <h3>Project</h3>
     <div class="bar"><button id="bSave">Save project…</button><button id="bLoad">Load project…</button><button id="bNew" class="danger">New / demo</button><input type="file" id="fileIn" accept=".json,application/json" hidden></div>
-    <div class="bar"><button id="bImportMidi" title="Bring the notes of a MIDI file (.mid) into the sequencer">⤒ Import MIDI…</button><label class="f" title="Off = the file’s notes go after your last bar"><input type="checkbox" id="midiReplace" checked> Replace my notes</label><label class="f"><input type="checkbox" id="midiTempo" checked> Use its tempo</label><input type="file" id="midiFileIn" accept=".mid,.midi,audio/midi,audio/x-midi" hidden></div>
+    <div class="bar"><button id="bImportMidi" title="Bring the notes of a MIDI file (.mid) into the sequencer">⤒ Import MIDI…</button><label class="f" title="Off = the file’s notes go after your last bar"><input type="checkbox" id="midiReplace" checked> Replace my notes</label><label class="f"><input type="checkbox" id="midiTempo" checked> Use its tempo</label><label class="f" title="Auto: an arpeggio or melody plays exactly as written; block chords get arpeggiated">Notes <select id="midiImpMode"><option value="auto">Auto</option><option value="arp">Arpeggiate the chords</option><option value="exact">Play exactly as written</option></select></label><input type="file" id="midiFileIn" accept=".mid,.midi,audio/midi,audio/x-midi" hidden></div>
     <div id="status"></div>
   </div>
 </div>
@@ -4268,9 +4268,16 @@ function parseMidi(buf){
 async function importMidi(file){
   let m;try{m=parseMidi(await file.arrayBuffer())}catch(e){status(`Couldn’t read ${file.name}: ${e}`);return false}
   let tracks=m.tracks.filter(t=>t.notes.length);
-  const ch=tracks.find(t=>/chords/i.test(t.name));if(ch&&tracks.some(t=>/arpeggio/i.test(t.name)))tracks=[ch];   // one of our own exports: take the chords, not the arpeggio they made
+  const mode=$('midiImpMode').value,arT=tracks.find(t=>/arpeggio/i.test(t.name)),chT=tracks.find(t=>/chords/i.test(t.name));
+  let exact;
+  if(arT){   // one of our own exports: its arpeggio track is exactly what played; its chords track (if any) is what it was made from
+    if(mode==='arp'){tracks=[chT||arT];exact=false}else{tracks=[arT];exact=true}}
   let notes=tracks.flatMap(t=>t.notes);const pitched=notes.filter(n=>n.ch!==9);if(pitched.length)notes=pitched;   // leave out drums (channel 10)
   if(!notes.length){status(`${file.name} has no notes in it.`);return false}
+  if(exact==null){   // someone else's file: block chords get arpeggiated, a line (melody, arpeggio) plays as written
+    const starts=new Map();for(const n of notes)starts.set(n.s,(starts.get(n.s)||0)+1);
+    const chordy=[...starts.values()].filter(c=>c>=2).length/Math.max(1,starts.size);
+    exact=mode==='exact'||(mode==='auto'&&chordy<.5);}
   const rep=$('midiReplace').checked,k=480/m.div,LIM=512*1920;
   pushUndo();
   const at=rep?0:Math.ceil(S.notes.reduce((a,n)=>Math.max(a,n.s+n.l),0)/1920)*1920;
@@ -4278,14 +4285,15 @@ async function importMidi(file){
   const cut=conv.length<notes.length;conv.forEach(n=>{if(n.s+n.l>LIM)n.l=LIM-n.s});
   const seen=new Set();conv=conv.filter(n=>{const key=n.p+':'+n.s;if(seen.has(key))return false;seen.add(key);return true});
   const end=Math.max(...conv.map(n=>n.s+n.l));
-  if(rep){S.notes=[];S.blocks=[];selBlk=null}
+  if(rep){S.notes=[];S.blocks=[];S.segs=[];selBlk=null}   // replacing: the old timeline sections go too
   S.notes.push(...conv);sel.clear();
   S.bars=clamp(Math.max(rep?1:S.bars,Math.ceil(end/1920)),1,512);$('bars').value=S.bars;fixProfile();
   if($('midiTempo').checked&&m.tempo){S.bpm=clamp(Math.round(m.tempo),30,300);$('bpm').value=S.bpm}
   const bE=Math.min(S.bars*1920,Math.ceil(end/1920)*1920);
   if(bE>at){const b={id:nextId++,s:at,l:bE-at,loop:bE-at,name:file.name.replace(/\.[^.]+$/,'').slice(0,20)||nextBlkName(),h:nextBlkHue()};blkPlace(b)}
+  if(exact&&bE>at){const g={id:nextId++,s:at,l:bE-at,pat:'poly',rate:0,oct:0};S.segs.push(g);resolveOverlaps(g)}   // a Poly section: played exactly, not arpeggiated again
   layout();changed(true);
-  status(`Imported ${file.name}: ${conv.length} notes${tracks.length>1?` from ${tracks.length} tracks`:''}, ${Math.ceil((end-at)/1920)} bars${$('midiTempo').checked&&m.tempo?` at ${S.bpm} BPM`:''}${cut?' (cut at bar 512)':''}${rep?'':` — added from bar ${at/1920+1}`}. Tip: the “Poly” pattern plays it exactly as written.`);
+  status(`Imported ${file.name}: ${conv.length} notes${tracks.length>1?` from ${tracks.length} tracks`:''}, ${Math.ceil((end-at)/1920)} bars${$('midiTempo').checked&&m.tempo?` at ${S.bpm} BPM`:''}${cut?' (cut at bar 512)':''}${rep?'':` — added from bar ${at/1920+1}`}. ${exact?'It plays exactly as written (a Poly section).':'The arpeggiator plays these chords.'}`);toastMsg(`✓ Imported ${file.name}`);
   return true;
 }
 $('bImportMidi').onclick=()=>$('midiFileIn').click();
