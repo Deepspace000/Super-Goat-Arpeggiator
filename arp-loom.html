@@ -275,6 +275,23 @@ html.touch #cloneBtn{padding:6px 12px;font-size:14px}
 .pcFoot{display:flex;gap:8px;flex-wrap:wrap}
 .pcNote{font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.35}
 
+
+/* ---------- the save prompt + confirmation toast ---------- */
+.askBg{position:fixed;inset:0;z-index:70;background:rgba(5,6,10,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.askBg[hidden],.askCard[hidden],.toast[hidden]{display:none}
+.askCard{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:71;width:min(420px,calc(100vw - 32px));box-sizing:border-box;padding:18px 18px 16px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(32,30,50,.99),rgba(16,17,27,.99));border:1px solid rgba(199,155,255,.6);box-shadow:0 26px 80px rgba(0,0,0,.7),0 0 30px rgba(199,155,255,.18);color:var(--txt)}
+.askCard>b{display:block;font-size:17px;margin-bottom:6px;color:#efe4ff}
+.askCard p{margin:0 0 12px;color:var(--dim);font-size:13px;line-height:1.4}
+.askCard label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
+#askInput{width:100%;box-sizing:border-box;font-size:17px;padding:8px 10px}
+.askBtns{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.askBtns button{padding:8px 16px;font-size:15px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,12px);z-index:72;max-width:calc(100vw - 32px);box-sizing:border-box;padding:11px 22px;border-radius:12px;font-size:15px;font-weight:600;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;background:rgba(16,34,26,.97);border:1px solid rgba(120,255,170,.65);color:#c9ffe0;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:rgba(48,16,20,.97);border-color:rgba(255,120,130,.65);color:#ffd0d4}
+#pieceSave{padding-left:9px;padding-right:9px}
+
 /* ---------- goat banner ---------- */
 .goatBanner{--h:285;position:relative;display:flex;align-items:center;gap:18px;margin:10px 12px 0;padding:6px 20px 6px 10px;border-radius:14px;overflow:hidden;isolation:isolate;
   background:linear-gradient(120deg,hsla(285,85%,70%,.20),hsla(200,80%,45%,.08) 45%,hsla(330,90%,65%,.16)),rgba(12,15,22,.55);
@@ -555,7 +572,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 </div>
 <header>
   <h1 title="Super Goat Arpeggiator, by Goat Bleats"><small>🐐 GOAT BLEATS</small><span style="color:var(--acc)">SUPER GOAT <span>ARPEGGIATOR</span></span></h1>
-  <button id="pieceBtn" title="Your pieces — save, open, start a new one (Ctrl+S saves)">🎼 <span id="pieceName">Untitled piece</span> ▾</button>
+  <button id="pieceBtn" title="Your pieces — save, open, start a new one (Ctrl+S saves)">🎼 <span id="pieceName">Untitled piece</span> ▾</button><button id="pieceSave" title="Save this piece (Ctrl+S)">💾</button>
   <button id="bPlay" class="play">▶ Play</button>
   <button id="bRec" title="Record from your MIDI keyboard (R)">● Rec</button>
   <button id="bRew" title="Back to start">⏮</button>
@@ -660,6 +677,7 @@ body.resizing,body.resizing *{cursor:col-resize!important}
 <div class="cloneCard" id="cloneCard" hidden><div class="ccHead"><b>⧉ CLONE BARS</b><button id="ccClose" title="Close (Esc)">✕</button></div><div class="ccRow"><span>Bars</span><span class="ccNum"><button data-step="-1" data-for="ccFrom" title="One less">−</button><input id="ccFrom" type="number" inputmode="numeric" min="1" max="512" step="1" title="First bar to copy"><button data-step="1" data-for="ccFrom" title="One more">+</button></span><span style="min-width:0">to</span><span class="ccNum"><button data-step="-1" data-for="ccTo" title="One less">−</button><input id="ccTo" type="number" inputmode="numeric" min="1" max="512" step="1" title="Last bar to copy"><button data-step="1" data-for="ccTo" title="One more">+</button></span></div><div class="ccRow"><span>Paste at bar</span><span class="ccNum"><button data-step="-1" data-for="ccAt" title="One less">−</button><input id="ccAt" type="number" inputmode="numeric" min="1" max="512" step="1" title="Where the copy starts"><button data-step="1" data-for="ccAt" title="One more">+</button></span></div><div class="ccRow"><span>Copies</span><span class="ccNum"><button data-step="-1" data-for="ccTimes" title="One less">−</button><input id="ccTimes" type="number" inputmode="numeric" min="1" max="512" step="1" title="How many copies, one after another"><button data-step="1" data-for="ccTimes" title="One more">+</button></span></div><div class="ccRow"><label class="f" title="Copy the arp pattern changes in those bars too"><input type="checkbox" id="ccSegs"> Arp timeline</label><label class="f" title="Copy the volume, filter, tuning, pan, articulation, glide and rate lanes too"><input type="checkbox" id="ccLanes"> Drawn lanes</label></div><div class="ccInfo" id="ccInfo"></div><button id="ccGo" class="on">⧉ Clone</button></div>
 <div class="blkMenu" id="blkMenu" hidden><div class="bmHead" id="bmHead"></div><div class="bmRow"><span>Move to bar</span><input id="bmMove" type="number" inputmode="numeric" min="1" max="512"><button id="bmMoveGo">Move</button></div><div class="bmRow"><span>Length (bars)</span><input id="bmLen" type="number" inputmode="numeric" min="1" max="512" title="Longer = the section repeats; shorter = it’s cut"><button id="bmLenGo">Set</button></div><div class="bmRow"><span>Copy to bar</span><input id="bmCopyTo" type="number" inputmode="numeric" min="1" max="512"><button id="bmCopyGo">Copy</button></div><button id="bmDup">⧺ Duplicate (right after it)</button><button id="bmRename">✎ Rename…</button><button id="bmDel" class="danger">🗑 Delete section</button></div>
 <div class="pieceCard" id="pieceCard" hidden><div class="pcHead"><b>🎼 YOUR PIECES</b><button id="pcClose" title="Close (Esc)">✕</button></div><div class="pcRow"><span>This piece</span><input id="pcTitle" type="text" maxlength="60" placeholder="Give it a name…"><button id="pcSave" class="on" title="Ctrl+S">💾 Save</button></div><div class="pcInfo" id="pcInfo"></div><div class="pcRow"><button id="pcNew" title="Start an empty piece (this one is saved first)">＋ New piece</button></div><div class="pcList" id="pcList"></div><div class="pcFoot"><button id="pcBackup" title="Save every piece into one file">⤓ Back up all pieces</button><button id="pcRestore" title="Bring pieces back from a backup (or open a project file as a piece)">⤒ Restore a backup…</button><input type="file" id="pcRestoreIn" accept=".json,application/json" hidden></div><div class="pcNote" id="pcNote"></div></div>
+<div class="askBg" id="askBg" hidden></div><div class="askCard" id="askCard" role="dialog" aria-modal="true" hidden><b id="askTitle"></b><p id="askText"></p><label id="askLabel" for="askInput"></label><input id="askInput" type="text" maxlength="80" autocomplete="off"><div class="askBtns"><button id="askCancel">Cancel</button><button id="askOk" class="on">OK</button></div></div><div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <div class="barn" id="barn">
 <div class="barnHead"><b>🐐 THE BARN</b><span>every device lives down here — scroll back up (or leave the barn) for the roll</span></div>
 <div class="hint">
@@ -2736,7 +2754,7 @@ $('bWav').onclick=async()=>{
     const{buf,len,sr}=await renderSong();
     if($('normalize').checked){let pk=0;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
       if(pk>0){const g=Math.pow(10,-1/20)/pk;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]*=g}}}
-    download(wav24(buf),fname()+'.wav');
+    download(wav24(buf),fname()+'.wav');if(!PLUGIN)toastMsg(`✓ Exported ${fname()}.wav`);
     status(`Exported ${fname()}.wav — ${(len/sr).toFixed(1)} s, 24-bit, 48 kHz stereo.`);
   }catch(err){console.error(err);status('Render failed: '+err.message)}
   rendering=false;$('bWav').disabled=false;
@@ -2768,12 +2786,17 @@ $('bMidi').onclick=()=>{
   const tracks=[trackChunk(noteEvs(arp,0).concat(ccEv),'Super Goat Arpeggiator – arpeggio',true)];
   if($('srcTrack').checked)tracks.push(trackChunk(noteEvs(src,1),'Super Goat Arpeggiator – chords',false));
   const fmt=tracks.length>1?1:0,hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,fmt,0,tracks.length,(TPQ>>8)&255,TPQ&255];
-  download(new Blob([new Uint8Array(hdr.concat(...tracks))],{type:'audio/midi'}),fname()+'.mid');
+  download(new Blob([new Uint8Array(hdr.concat(...tracks))],{type:'audio/midi'}),fname()+'.mid');if(!PLUGIN)toastMsg(`✓ Exported ${fname()}.mid`);
   status(`Exported ${fname()}.mid — ${arp.length} arp notes${fmt?' + chord track':''}, ${S.bpm} BPM.`);
 };
 
 /* ============================ project save/load ============================ */
-$('bSave').onclick=()=>{download(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),fname()+'.arploom.json');status('Project saved.')};
+$('bSave').onclick=async()=>{
+  const clean=t=>t.replace(/[\\/:*?"<>|]+/g,'_').replace(/(\.arploom)?\.json$/i,'').trim(),def=clean(S.title&&!/^Untitled piece/.test(S.title)?S.title:fname());
+  const name=await askUser({title:'⤓ Save a project file',text:'A file of this piece you can keep, send, or open later with “Load project…”.',label:'File name',value:def,ok:'⤓ Save file'});
+  if(name==null)return;const file=(clean(name)||def)+'.arploom.json';
+  download(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),file);status('Project saved as '+file+'.');
+  if(!PLUGIN)toastMsg(`✓ Saved ${file} — it’s in your Downloads`)};
 $('bLoad').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=async()=>{const f=$('fileIn').files[0];$('fileIn').value='';if(!f)return;   // a project file opens as a new piece
   try{const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.notes))throw new Error('not a project file');await pieceFlush();
@@ -4076,7 +4099,7 @@ function cloneBars(a,b,d,times,o={}){
       AT.value=v.d+(Math.min(v.b,S.bars)-v.a+1)*v.n;atAuto=false;upd();
     }
   };
-  addEventListener('keydown',e=>{if(e.key==='Escape'&&!card.hidden){close();e.preventDefault();e.stopImmediatePropagation()}},true);
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!card.hidden&&!window.__askOpen){close();e.preventDefault();e.stopImmediatePropagation()}},true);
   window.cloneOpen=open;
 })();
 
@@ -4333,7 +4356,7 @@ const pieceAgo=t=>{const s=(Date.now()-t)/1000;return s<50?'just now':s<3600?Mat
 function pieceWrite(){
   if(!S||!S.pieceId)return Promise.resolve();
   return PIECES.put({id:S.pieceId,title:S.title||'Untitled piece',created:S.pieceCreated||Date.now(),updated:Date.now(),bars:S.bars,bpm:S.bpm,notes:S.notes.length,state:JSON.stringify(S)})
-    .catch(e=>status('Couldn’t save the piece: '+e));
+    .then(()=>true).catch(e=>{status('Couldn’t save the piece: '+e);return false});
 }
 function pieceAutoSave(){if(typeof S==='undefined'||!S||!S.pieceId)return;clearTimeout(pieceT);pieceT=setTimeout(pieceWrite,900)}
 // put the work on screen into the library (a new entry if it has none) before switching away from it
@@ -4346,11 +4369,15 @@ function pieceSwitchTo(o){
   $('bars').value=S.bars;$('bpm').value=S.bpm;layout();refreshAll();changed(true);saveNow();pieceUI();if(!$('pieceCard').hidden)pieceCardFill();
 }
 async function pieceSaveNow(){
-  if(!S.pieceId){S.pieceId=newPieceId();S.pieceCreated=Date.now()}
-  const t=$('pcTitle').value.trim();if(!$('pieceCard').hidden&&t)S.title=t;if(!S.title)S.title='Untitled piece';
-  clearTimeout(pieceT);await pieceWrite();saveNow();pieceUI();if(!$('pieceCard').hidden)pieceCardFill();
+  const first=!S.pieceId,cur=(!$('pieceCard').hidden&&$('pcTitle').value.trim())||S.title||'Untitled piece';
+  const name=await askUser({title:'💾 Save this piece',text:first?'It goes into Your pieces (🎼) and keeps saving itself as you work.':'Save your changes to this piece. You can rename it here too.',label:'Name',value:cur,ok:'💾 Save'});
+  if(name==null)return;   // cancelled
+  if(first){S.pieceId=newPieceId();S.pieceCreated=Date.now()}
+  S.title=name.trim()||'Untitled piece';
+  clearTimeout(pieceT);const ok=await pieceWrite();saveNow();pieceUI();if(!$('pieceCard').hidden)pieceCardFill();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}   // ask the browser to keep it
-  status(`Saved “${S.title}”.`);
+  if(ok===false){toastMsg('Couldn’t save — see the message in Export & Project','bad');return}
+  status(`Saved “${S.title}”.`);toastMsg(`✓ Saved “${S.title}”`);
 }
 async function pieceOpen(id){
   await pieceFlush();const p=await PIECES.get(id);if(!p){status('That piece isn’t there any more.');return}
@@ -4408,7 +4435,7 @@ function pieceCardFill(){
   $('pcTitle').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pieceSaveNow()}});
   $('pcBackup').onclick=async()=>{await pieceFlush();const all=await PIECES.all();
     download(new Blob([JSON.stringify({app:'super-goat-arpeggiator',kind:'pieces',version:1,saved:Date.now(),pieces:all})],{type:'application/json'}),'super-goat-pieces-'+new Date().toISOString().slice(0,10)+'.json');
-    status(`Backed up ${all.length} piece${all.length===1?'':'s'}.`)};
+    status(`Backed up ${all.length} piece${all.length===1?'':'s'}.`);if(!PLUGIN)toastMsg(`✓ Backed up ${all.length} piece${all.length===1?'':'s'}`)};
   $('pcRestore').onclick=()=>$('pcRestoreIn').click();
   $('pcRestoreIn').onchange=async()=>{const f=$('pcRestoreIn').files[0];$('pcRestoreIn').value='';if(!f)return;
     let o;try{o=JSON.parse(await f.text())}catch(e){status('That file isn’t a backup.');return}
@@ -4420,8 +4447,8 @@ function pieceCardFill(){
     else{status('That file isn’t a backup.');return}
     pieceList();status(`Restored ${n} piece${n===1?'':'s'}${n?'':' (they were already here)'}.`)};
   addEventListener('keydown',e=>{
-    if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopImmediatePropagation();pieceSaveNow();return}
-    if(e.key==='Escape'&&!card.hidden){close();e.preventDefault();e.stopImmediatePropagation()}},true);
+    if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopImmediatePropagation();if(!window.__askOpen)pieceSaveNow();return}
+    if(e.key==='Escape'&&!card.hidden&&!window.__askOpen){close();e.preventDefault();e.stopImmediatePropagation()}},true);
   setInterval(pieceUI,800);setTimeout(pieceUI,0);
 })();
 
@@ -4468,6 +4495,23 @@ function renderGroupBar(g){
   btn('✕',()=>{selBlk=null;blkMulti=false},'Deselect (Esc)');
   bar.append(el('span','legend','Drag any of them to move them together · Shift-click adds or removes one · Ctrl+C / X / V'));
 }
+
+
+/* ---------- a small "are you sure / what name" window, and a confirmation that pops up ---------- */
+function askUser(o){
+  return new Promise(res=>{
+    const c=$('askCard'),bg=$('askBg'),inp=$('askInput');
+    $('askTitle').textContent=o.title||'';$('askText').textContent=o.text||'';$('askLabel').textContent=o.label||'';$('askOk').textContent=o.ok||'OK';inp.value=o.value||'';
+    c.hidden=false;bg.hidden=false;window.__askOpen=true;setTimeout(()=>{inp.focus();inp.select()},30);
+    const done=v=>{c.hidden=true;bg.hidden=true;window.__askOpen=false;$('askOk').onclick=$('askCancel').onclick=bg.onclick=inp.onkeydown=null;res(v)};
+    $('askOk').onclick=()=>done(inp.value);$('askCancel').onclick=()=>done(null);bg.onclick=()=>done(null);
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(inp.value)}else if(e.key==='Escape'){e.preventDefault();done(null)}};
+  });
+}
+let toastT=0;
+function toastMsg(msg,kind='ok'){const t=$('toast');t.textContent=msg;t.className='toast '+kind;t.hidden=false;void t.offsetWidth;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>{t.classList.remove('show');setTimeout(()=>{if(!t.classList.contains('show'))t.hidden=true},300)},2800)}
+$('pieceSave').onclick=()=>pieceSaveNow();
 
 /* ============================ VST3 plugin bridge (only active inside the Arp Loom plugin) ============================ */
 const JB=window.__JUCE__&&window.__JUCE__.backend;
@@ -4519,7 +4563,7 @@ if(PLUGIN){
     midiModeUI();
   });
 
-  JB.addEventListener('saved',d=>{const st=$('status');if(st){st.textContent=d.msg;st.style.color=d.ok?'#8fe3a8':'#ff9b9b'}});
+  JB.addEventListener('saved',d=>{const st=$('status');if(st){st.textContent=d.msg;st.style.color=d.ok?'#8fe3a8':'#ff9b9b'}toastMsg((d.ok?'✓ ':'')+d.msg,d.ok?'ok':'bad')});
   // ---- takes: the plugin writes a WAV of itself while Reason records ----
   document.body.classList.add('plugin');
   $('takeMode').onchange=()=>emit('takeMode',{mode:+$('takeMode').value});
