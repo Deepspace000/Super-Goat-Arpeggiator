@@ -40,6 +40,7 @@ ArpLoomEditor::ArpLoomEditor (ArpLoomProcessor& p)
                .withEventListener ("transport", [this] (juce::var v) { proc.setTransport ((bool) v.getProperty ("play", false), (double) v.getProperty ("pos", 0.0)); })
                .withEventListener ("midiMode",  [this] (juce::var v) { proc.setMidiMode (v.getProperty ("mode", "arp").toString()); })
                .withEventListener ("saveFile",  [this] (juce::var v) { saveFile (v); })
+               .withEventListener ("openFile",  [this] (juce::var v) { openFile (v); })
                .withEventListener ("takeMode",  [this] (juce::var v) { proc.setTakeMode ((int) v.getProperty ("mode", 1)); sentTakeKey.clear(); })
                .withEventListener ("takeReveal",[this] (juce::var)   { auto f = proc.getLastTake(); if (f.existsAsFile()) f.revealToUser(); else ArpLoomProcessor::takesFolder().revealToUser(); })
                .withEventListener ("takeDrag",  [this] (juce::var)   { dragLastTake(); }))
@@ -133,6 +134,38 @@ void ArpLoomEditor::sendTakeInfo()
     o->setProperty ("last", last.existsAsFile() ? last.getFileName() : juce::String());
     o->setProperty ("count", proc.getTakeCount());
     web.emitEventIfBrowserIsVisible ("take", juce::var (o.get()));
+}
+
+// the page asks for a file (Load project, Import MIDI, Restore backup): a native Open dialog,
+// then the file goes back to the page as base64 — the web view's own file picker isn't dependable inside a DAW
+void ArpLoomEditor::openFile (const juce::var& v)
+{
+    const auto id = v.getProperty ("id", "").toString();
+    auto start = juce::File::getSpecialLocation (juce::File::userHomeDirectory).getChildFile ("Downloads");   // where the browser version saves things
+    if (! start.isDirectory()) start = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory);
+    chooser = std::make_unique<juce::FileChooser> (v.getProperty ("title", "Open").toString(), start, v.getProperty ("patterns", "*").toString());
+    chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                          [safe = juce::Component::SafePointer<ArpLoomEditor> (this), id] (const juce::FileChooser& fc)
+                          {
+                              if (safe == nullptr) return;
+                              juce::DynamicObject::Ptr o = new juce::DynamicObject();
+                              o->setProperty ("id", id);
+                              const auto f = fc.getResult();
+                              if (f == juce::File())
+                                  o->setProperty ("cancelled", true);
+                              else
+                              {
+                                  juce::MemoryBlock data;
+                                  if (f.getSize() > 64 * 1024 * 1024 || ! f.loadFileAsData (data))
+                                      o->setProperty ("error", "Couldn't read " + f.getFileName());
+                                  else
+                                  {
+                                      o->setProperty ("name", f.getFileName());
+                                      o->setProperty ("b64", juce::Base64::toBase64 (data.getData(), data.getSize()));
+                                  }
+                              }
+                              safe->web.emitEventIfBrowserIsVisible ("fileOpened", juce::var (o.get()));
+                          });
 }
 
 void ArpLoomEditor::saveFile (const juce::var& v)

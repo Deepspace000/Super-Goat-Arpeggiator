@@ -2799,10 +2799,13 @@ $('bSave').onclick=async()=>{
   download(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),file);status('Project saved as '+file+'.');
   if(!PLUGIN)toastMsg(`✓ Saved ${file} — it’s in your Downloads`)};
 $('bLoad').onclick=()=>$('fileIn').click();
-$('fileIn').onchange=async()=>{const f=$('fileIn').files[0];$('fileIn').value='';if(!f)return;   // a project file opens as a new piece
+async function openProjectFile(f){   // a project file opens as a new piece (the one that was open is saved first)
   try{const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.notes))throw new Error('not a project file');await pieceFlush();
-    o.pieceId=newPieceId();o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');pieceSwitchTo(o);await pieceWrite();status(`Opened ${f.name} as a new piece.`)}
-  catch(e){status('Could not load: '+e.message)}};
+    o.pieceId=newPieceId();o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');pieceSwitchTo(o);await pieceWrite();
+    status(`Opened ${f.name} as a new piece.`);toastMsg(`✓ Opened “${S.title}”`)}
+  catch(e){status('Could not load: '+e.message);toastMsg(`Couldn’t open ${f.name}: ${e.message}`,'bad')}
+}
+$('fileIn').onchange=async()=>{const f=$('fileIn').files[0];$('fileIn').value='';if(f)await openProjectFile(f)};
 $('bNew').onclick=async()=>{await pieceFlush();pieceSwitchTo(null);S.pieceId=newPieceId();S.pieceCreated=Date.now();S.title='Demo';await pieceWrite();pieceUI();
   status('Opened the demo as a new piece — your last piece is saved.')};
 
@@ -4436,6 +4439,17 @@ async function pieceList(){
     box.append(row);
   }
 }
+// bring pieces back from a backup file (or a single project file, as a new piece)
+async function restoreBackup(f){
+  let o;try{o=JSON.parse(await f.text())}catch(e){status('That file isn’t a backup.');toastMsg('That file isn’t a backup','bad');return}
+  let n=0;
+  if(o&&o.kind==='pieces'&&Array.isArray(o.pieces)){const have=new Map((await PIECES.all()).map(x=>[x.id,x]));
+    for(const x of o.pieces){if(!x||!x.id||!x.state)continue;const h=have.get(x.id);if(h&&h.updated>=x.updated)continue;await PIECES.put(x);n++}}
+  else if(o&&Array.isArray(o.notes)){const id=newPieceId();o.pieceId=id;o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');
+    await PIECES.put({id,title:o.title,created:Date.now(),updated:Date.now(),bars:o.bars||16,bpm:o.bpm||120,notes:o.notes.length,state:JSON.stringify(o)});n=1}
+  else{status('That file isn’t a backup.');toastMsg('That file isn’t a backup','bad');return}
+  pieceList();status(`Restored ${n} piece${n===1?'':'s'}${n?'':' (they were already here)'}.`);toastMsg(`✓ Restored ${n} piece${n===1?'':'s'}`);
+}
 function pieceCardFill(){
   $('pcTitle').value=S.title||'';
   $('pcInfo').textContent=`${S.bars} bars · ${S.bpm} BPM · ${S.notes.length} notes${S.pieceId?' · saves as you go':' · not saved yet'}`;
@@ -4453,15 +4467,7 @@ function pieceCardFill(){
     download(new Blob([JSON.stringify({app:'super-goat-arpeggiator',kind:'pieces',version:1,saved:Date.now(),pieces:all})],{type:'application/json'}),'super-goat-pieces-'+new Date().toISOString().slice(0,10)+'.json');
     status(`Backed up ${all.length} piece${all.length===1?'':'s'}.`);if(!PLUGIN)toastMsg(`✓ Backed up ${all.length} piece${all.length===1?'':'s'}`)};
   $('pcRestore').onclick=()=>$('pcRestoreIn').click();
-  $('pcRestoreIn').onchange=async()=>{const f=$('pcRestoreIn').files[0];$('pcRestoreIn').value='';if(!f)return;
-    let o;try{o=JSON.parse(await f.text())}catch(e){status('That file isn’t a backup.');return}
-    let n=0;
-    if(o&&o.kind==='pieces'&&Array.isArray(o.pieces)){const have=new Map((await PIECES.all()).map(x=>[x.id,x]));
-      for(const x of o.pieces){if(!x||!x.id||!x.state)continue;const h=have.get(x.id);if(h&&h.updated>=x.updated)continue;await PIECES.put(x);n++}}
-    else if(o&&Array.isArray(o.notes)){const id=newPieceId();o.pieceId=id;o.pieceCreated=Date.now();o.title=o.title||f.name.replace(/(\.arploom)?\.json$/i,'');
-      await PIECES.put({id,title:o.title,created:Date.now(),updated:Date.now(),bars:o.bars||16,bpm:o.bpm||120,notes:o.notes.length,state:JSON.stringify(o)});n=1}
-    else{status('That file isn’t a backup.');return}
-    pieceList();status(`Restored ${n} piece${n===1?'':'s'}${n?'':' (they were already here)'}.`)};
+  $('pcRestoreIn').onchange=async()=>{const f=$('pcRestoreIn').files[0];$('pcRestoreIn').value='';if(f)await restoreBackup(f)};
   addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopImmediatePropagation();if(!window.__askOpen)pieceSaveNow();return}
     if(e.key==='Escape'&&!card.hidden&&!window.__askOpen){close();e.preventDefault();e.stopImmediatePropagation()}},true);
@@ -4582,6 +4588,16 @@ if(PLUGIN){
   });
 
   JB.addEventListener('saved',d=>{const st=$('status');if(st){st.textContent=d.msg;st.style.color=d.ok?'#8fe3a8':'#ff9b9b'}toastMsg((d.ok?'✓ ':'')+d.msg,d.ok?'ok':'bad')});
+  // opening files goes through the plugin: a proper Windows "Open" dialog (the web view's own file picker isn't dependable inside a DAW)
+  const picks=new Map();
+  JB.addEventListener('fileOpened',d=>{const done=picks.get(d.id);if(!done)return;picks.delete(d.id);
+    if(d.cancelled||!d.b64){if(d.error){status(d.error);toastMsg(d.error,'bad')}done(null);return}
+    const bin=atob(d.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);done(new File([u],d.name||'file'))});
+  const pick=(patterns,title)=>new Promise(res=>{const id='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);picks.set(id,res);emit('openFile',{id,patterns,title})});
+  $('bLoad').onclick=async()=>{const f=await pick('*.json','Load a Super Goat project');if(f)await openProjectFile(f)};
+  $('bImportMidi').onclick=async()=>{const f=await pick('*.mid;*.midi','Import a MIDI file');if(f)await importMidi(f)};
+  $('pcRestore').onclick=async()=>{const f=await pick('*.json','Restore pieces from a backup');if(f)await restoreBackup(f)};
+
   // ---- takes: the plugin writes a WAV of itself while Reason records ----
   document.body.classList.add('plugin');
   $('takeMode').onchange=()=>emit('takeMode',{mode:+$('takeMode').value});

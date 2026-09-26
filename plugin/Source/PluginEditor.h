@@ -15,6 +15,7 @@ private:
     std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url);
     void sendInit();
     void saveFile (const juce::var& v);
+    void openFile (const juce::var& v);
     void dragLastTake();
     void sendTakeInfo();
     juce::String sentTakeKey;
