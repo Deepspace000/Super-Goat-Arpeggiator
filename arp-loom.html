@@ -4409,7 +4409,9 @@ async function pieceDelete(id){
   pieceUI();pieceList();status(`Deleted “${p&&p.title||'piece'}”.`);
 }
 function pieceUI(){
-  if(typeof S==='undefined'||!S)return;const nm=$('pieceName'),t=S.title||'Untitled piece',h=S.pieceId?t:t+' <span class="unsaved">(not saved)</span>';
+  if(typeof S==='undefined'||!S)return;
+  // exports are named after the piece: the Export panel's File name follows its saved name (you can still type another)
+  {const t=(S.title||'').trim(),f=$('fname');if(f&&t&&!/^Untitled piece/.test(t)&&f.dataset.piece!==t){f.dataset.piece=t;f.value=t.replace(/[\\/:*?"<>|]+/g,'_')}}const nm=$('pieceName'),t=S.title||'Untitled piece',h=S.pieceId?t:t+' <span class="unsaved">(not saved)</span>';
   if(nm.dataset.h!==h){nm.dataset.h=h;nm.innerHTML='';nm.append(t);if(!S.pieceId){const u=document.createElement('span');u.className='unsaved';u.textContent=' (not saved)';nm.append(u)}}
 }
 async function pieceList(){
